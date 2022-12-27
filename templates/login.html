@@ -1,0 +1,24 @@
+{% extends "layout_index.html" %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block form %}
+    <script>
+        function sendToRegister() {
+            window.location.assign("/register");
+            return false;
+        }
+    </script>   
+    <h2 class="blue text_center mb">Fazer Login</h2>
+    <form id="form_login"action="/login" method="POST">
+        <input type="text" name="email" placeholder="Digite seu e-mail" autocomplete="off">
+        <input type="password" name="password" placeholder="Digite sua senha">
+        <div class="actions">
+            <button type="submit">Entrar</button>
+            <button onclick="return sendToRegister();" type="text" id="register">Registrar</button>
+        </div>
+    </form>
+
+{% endblock %}

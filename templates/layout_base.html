@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <title>Finanças: {% block title %}{% endblock %}</title>
+        <script src="https://kit.fontawesome.com/a6ee18bd44.js" crossorigin="anonymous"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/base_style.css">
+        <link rel="stylesheet" href="/static/css/layout_style.css">
+        {% block css %}{% endblock %}
+        <script src="/static/js/layout_base.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <header id="header-nav" class="col align-center">
+                <div id="div-mobile" class="row">
+                    <h1 class="title">Minhas finanças</h1>
+                    <div id="dropbox-mobile" class="col">
+                        <button onclick="show(this);" id="btn-dropbox" for="mobile-nav"><i class="fa-solid fa-bars"></i></button>
+                        <nav id="mobile-nav" class="show">
+                            <a class="drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+                            <div class="mobile-dropbox">
+                                <a class="header drop-element font-1"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
+                                <a class="drop-element" style="display:none;font-size:0.9em;">Adicionar transação</a>
+                                <a class="drop-element" style="display:none;font-size:0.9em;">Ver transações</a>
+                            </div>
+
+
+                            <a class="drop-element" href="#"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
+                            <a class="drop-element red" href="#"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
+                            <a class="drop-element green" href="#"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
+                        </nav>
+                    </div>
+                </div>
+
+                <nav id="normal-nav" class="row">
+                    <div class="dropbox">
+                        <a class="header drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+                        <a class="drop-element" style="display:none;">Sair da conta</a>
+                    </div>
+                    <div class="dropbox">
+                        <a class="header drop-element"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
+                        <a class="drop-element" style="display:none;">Adicionar transação</a>
+                        <a class="drop-element" style="display:none;">Ver transações</a>
+                    </div>
+                    
+                    <a class="nav-element" href="#"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
+                    <a class="nav-element red" href="#"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
+                    <a class="nav-element green" href="#"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
+                </nav>
+
+            </header>
+            <main>
+                {% block main %}
+                {% endblock %}
+            </main>
+            <footer class="col align-center">
+                <p class="muted">Minhas finanças por <a href="#">AllanRPereira</a>. 
+                    Projeto hospedado no <a href="#">Github</a></p>
+            </footer>
+        </div>
+    </body>
+</html>

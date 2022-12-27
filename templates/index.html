@@ -1,0 +1,122 @@
+{% extends "layout_base.html" %}
+
+{% block css %}
+<link rel="stylesheet" href="/static/css/index.css">
+<script src="/static/js/index.js"></script>
+{% endblock %}
+
+{% block title %}
+Página Inicial
+{% endblock %}
+
+{% block main %}
+    <div class="col align-center">
+        <h1 class="mt">Painel Principal</h1>
+        <h2>Saldos</h2>
+        <section id="balances" class="row w-100 justify-center wrap">
+            <div class="box-money">
+                <p class="bold">Carteira</p>
+                <p class="cash">Saldo: <span style="color:green;">+ R$200,00</span></p>
+                <p class="muted">Última movimentação:<wbr> 10/02/2022</p>
+            </div>
+            <div class="box-money">
+                <p class="bold">Cartão de Crédito</p>
+                <p class="cash">Saldo: <span style="color:red;">- R$200,00</span></p>
+                <p class="muted">Última movimentação: 10/02/2022</p>
+            </div>
+            <div class="box-money">
+                <p class="bold">Dívidas</p>
+                <p class="cash">Saldo: <span style="color:red;">- R$200,00</span></p>
+                <p class="muted">Última movimentação: 10/02/2022</p>
+            </div>
+            <div class="box-money">
+                <p class="bold">Rendimentos</p>
+                <p class="cash">Saldo: <span style="color:green;">+ R$500,00</span></p>
+                <p class="muted">Última movimentação: 10/02/2022</p>
+            </div>
+        </section>
+
+        <h2 class="mt">Estatísticas</h2>
+        <section class="row w-100 justify-center wrap">
+            <div class="box-graph">
+                <p class="bold">Principais fontes de gastos</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Gasto Total</th>
+                            <th>Porcentagem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Bonanza</td>
+                            <td>R$ 200,00</td>
+                            <td>10%</td>
+                        </tr>
+                        <tr>
+                            <td>Éconis</td>
+                            <td>R$ 120,00</td>
+                            <td>6%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-graph">
+                <p class="bold" >Gastos por categoria</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Gasto Total</th>
+                            <th>Porcentagem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Saúde</td>
+                            <td>R$ 200,00</td>
+                            <td>10%</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-cart-shopping"></i>&nbsp Supermercado</td>
+                            <td>R$ 120,00</td>
+                            <td>6%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-graph">
+                <p class="bold">Principais rendimentos</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Rendimento Total</th>
+                            <th>Porcentagem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Salário</td>
+                            <td>R$ 200,00</td>
+                            <td>10%</td>
+                        </tr>
+                        <tr>
+                            <td>Presentes</td>
+                            <td>R$ 120,00</td>
+                            <td>6%</td>
+                        </tr>
+                        <tr>
+                            <td>Aposta</td>
+                            <td>R$ 60,00</td>
+                            <td>3%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+    </div>
+{% endblock %}
+

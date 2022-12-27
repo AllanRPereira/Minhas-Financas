@@ -1,0 +1,46 @@
+@font-face {
+    font-family: lobstertwo;
+    src: url("/static/fonts/lobstertwo.ttf");
+}
+
+@font-face {
+    font-family: roboto;
+    src: url("/static/fonts/roboto.ttf");
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height:100vh;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+.col {
+    display: flex;
+    flex-direction: column;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.muted {
+    font-weight: 300;
+    font-size: 0.6em;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.wrap {
+    flex-wrap: wrap;
+}

@@ -1,0 +1,56 @@
+.box-money {
+    text-align: center;
+    padding: 0 2px;
+    width: 24%;
+    display: table-cell;
+    border: 0.5px solid black;
+    border-collapse: collapse;
+}
+
+
+.box-graph {
+    text-align: center;
+    width: 45%;
+}
+
+.mt {
+    margin:0;
+    margin-top: 1em;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align:center;
+    font-size: 0.85em;
+}
+
+th, td {
+    padding: 0.2em 1em;
+}
+
+tr, td, th {
+    border: 0.5px solid #444;
+}
+
+
+@media screen and (max-width:610px) {
+    .box-money {
+        width: 45%;
+    }
+
+}
+
+@media screen and (max-width:800px) {
+    .box-graph {
+        width: 100%;
+    }
+
+}
+
+@media screen and (max-width:400px) {
+    .box-graph {
+        font-size: 0.85em;
+    }
+
+}
