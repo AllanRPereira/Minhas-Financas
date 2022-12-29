@@ -41,6 +41,22 @@
     width: 100%;
 }
 
+.w-75 {
+    width: 75%;
+}
+
 .wrap {
     flex-wrap: wrap;
+}
+
+.mt {
+    margin-top: 1em;
+}
+
+.mb {
+    margin-bottom: 1em;
+}
+
+.text-center {
+    text-align: center;
 }

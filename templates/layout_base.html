@@ -11,17 +11,17 @@
         <script src="/static/js/layout_base.js"></script>
     </head>
     <body>
-        <div class="container">
+        <div class="container align-center">
             <div id="pop-up">
                 <div id="form-content">
                     <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup();"></i>
                     <h2>Dados da Transação</h2>
-                    <form autocomplete="off" id="add-transaction" method="POST" action="/add/transaction" onsubmit="return false;">
+                    <form autocomplete="off" id="add-transaction" method="POST" action="{{ url_for('add_transaction') }}">
                         <label for="name">Nome da transação:</label>
                         <input type="text" name="name" placeholder="Ex.: Presente de Natal">
                         
                         <label for="value">Valor gasto:</label>
-                        <input type="number" name="value" placeholder="Ex.: 100, -100, ...">
+                        <input type="text" name="value" placeholder="Ex.: 100, -100, ...">
 
                         <label for="datetime">Data:</label>
                         <input type="date" name="datetime" placeholder="19/8/2022">
@@ -32,9 +32,6 @@
                         <label for="from">Origem da grana:</label>
                         <input type="text" name="from" placeholder="Ex.: Carteira, Cartão ...">
 
-                        <label for="category">Categoria:</label>
-                        <input type="text" name="category" placeholder="Ex.:  Saúde, Educação ...">
-
                         <label for="description">Descrição da transação:</label>
                         <textarea name="description" rows="5" cols="20" placeholder="Ex.: Presentes para netos pago no cartão"></textarea>
                         <button type="submit">Adicionar transação</button>
@@ -43,39 +40,39 @@
             </div>
             <header id="header-nav" class="col align-center">
                 <div id="div-mobile" class="row">
-                    <h1 class="title">Minhas finanças</h1>
+                    <h1 class="title" onclick="window.location.assign('/')">Minhas finanças</h1>
                     <div id="dropbox-mobile" class="col">
                         <button onclick="show(this);" id="btn-dropbox" for="mobile-nav"><i class="fa-solid fa-bars"></i></button>
                         <nav id="mobile-nav" class="show">
-                            <a class="drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+                            <a class="drop-element" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i>&nbsp Início</a>
                             <div class="mobile-dropbox">
                                 <a class="header drop-element font-1"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
                                 <a class="drop-element" style="display:none;font-size:0.9em;" onclick="show_popup()">Adicionar transação</a>
-                                <a class="drop-element" style="display:none;font-size:0.9em;" href="/transactions">Ver transações</a>
+                                <a class="drop-element" style="display:none;font-size:0.9em;" href="{{ url_for('transactions') }}">Ver transações</a>
                             </div>
 
 
-                            <a class="drop-element" href="#"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
-                            <a class="drop-element red" href="#"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
-                            <a class="drop-element green" href="#"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
+                            <a class="drop-element" href="{{ url_for('creditcard') }}"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
+                            <a class="drop-element red" href="{{ url_for('debts') }}"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
+                            <a class="drop-element green" href="{{ url_for('investiments') }}"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
                         </nav>
                     </div>
                 </div>
 
                 <nav id="normal-nav" class="row">
                     <div class="dropbox">
-                        <a class="header drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+                        <a class="header drop-element" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i>&nbsp Início</a>
                         <a class="drop-element" href="{{ url_for('logout') }}" style="display:none;">Sair da conta</a>
                     </div>
                     <div class="dropbox">
                         <a class="header drop-element"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
                         <a class="drop-element" style="display:none;" onclick="show_popup()">Adicionar transação</a>
-                        <a class="drop-element" style="display:none;" href="/transactions">Ver transações</a>
+                        <a class="drop-element" style="display:none;" href="{{ url_for('transactions') }}">Ver transações</a>
                     </div>
                     
-                    <a class="nav-element" href="#"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
-                    <a class="nav-element red" href="#"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
-                    <a class="nav-element green" href="#"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
+                    <a class="nav-element" href="{{ url_for('creditcard') }}"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
+                    <a class="nav-element red" href="{{ url_for('debts') }}"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
+                    <a class="nav-element green" href="{{ url_for('investiments') }}"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
                 </nav>
 
             </header>

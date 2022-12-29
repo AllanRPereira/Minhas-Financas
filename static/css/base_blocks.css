@@ -1,0 +1,54 @@
+.box {
+    width: 230px;
+    border-radius: 3px;
+    max-height: 14em;
+    border: 0.5px solid black;
+    margin: 0.5em;
+}
+
+.box-title {
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.box-balance {
+    font-size: 1.2em;
+    font-weight: 300;
+}
+
+.t-red {
+    color:red
+}
+
+.t-green {
+    color:green;
+}
+
+.options {
+    gap:0.5em;
+}
+
+.btn {
+    border-radius: 0px;
+    font-weight: 700;
+    color: white;
+    border: 0.5px solid black;
+    background-color: gray;
+    padding:0.5em;
+    transition: all .1s;
+    outline: 0;
+    line-height: normal;
+}
+
+.btn:active {
+    background-color: #222;
+}
+
+.btn-primary {
+    background-color: #2e86de;
+
+}
+
+.btn-primary:active {
+    background-color: #105191;
+}

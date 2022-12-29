@@ -65,7 +65,7 @@ db.commit()
 # Transações
 
 query = """
-    INSERT INTO transactions (value, timestamp, id_to, id_from, id_category, id_user)
+    INSERT INTO transactions (value, name, timestamp, id_to, id_from, id_user)
     VALUES (?, ?, ?, ?, ?, ?)
     """
 
@@ -92,17 +92,15 @@ for i in range(20):
         id_payer = db.execute("INSERT INTO payer (id_payment) VALUES (?)", data_payer).lastrowid
         db.execute("UPDATE payment_content SET balance=balance+? WHERE id=?", (cash, data_payer[0]))
     
-    id_category = rent_categorys[random.randint(0, n_category)]
     if result != 0:
         money[id_from] += cash
-        id_category = teller_categorys[random.randint(0, n_category)]
 
     data_insert.append((
         cash,
+        random_generator(size=10),
         round(datetime.now().timestamp()),
         id_payer,
         id_yield, 
-        id_category,
         id_user
     ))
 

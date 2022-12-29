@@ -30,6 +30,11 @@ footer a {
     font-weight: 100;
     color:#2e86de;
     font-size:4em;
+    transition: all .2s;
+}
+
+.title:hover {
+    color:#105191;
 }
 
 nav {
@@ -115,6 +120,7 @@ nav {
 }
 
 #header-nav {
+    width: 100%;
     position: relative;
     height: 12em;
 }
@@ -138,6 +144,7 @@ nav {
 }
 
 #dropbox-mobile {
+    display: none;
     margin-right: 3em;
     font-size: 0.9em;
     align-items: center;
@@ -239,4 +246,30 @@ nav {
         top: 6.5em;
     }
 
+}
+
+@media screen and (max-width:875px) {
+    #normal-nav {
+        display:none;
+    }
+    #dropbox-mobile {
+        display:flex;
+    }
+    #header-nav {
+        width: 80%;
+    }
+
+}
+
+@media screen and (max-width:875px) and (min-width:665px) {
+    #header-nav {
+        border-bottom: 0.5px solid #2e86de;
+    }
+
+}
+
+@media screen and (max-width:875px) and (min-width:540px) {
+    #header-nav {
+        height: 10em;
+    }
 }

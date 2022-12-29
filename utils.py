@@ -19,10 +19,32 @@ def brl(string):
 def percen(string):
     return f"{100 * string:.1f}%"
 
+def date_stamp(t):
+    return f"{t.year}/{t.month}/{t.day}"
+
 def check_email(email):
     if email.find("@") == -1:
         return False
     return True
+
+def check_to_from(db, element_to, element_from, id):
+    if element_to == "" or element_from == "":
+        return None
+
+    element_to = element_to.lower()
+    element_from = element_from.lower()
+    query = """
+    SELECT LOWER(pay.name) FROM payment_content AS pay WHERE id_user=?
+    """
+    result = db.execute(query, (id, )).fetchall()
+    to_payment = False
+    from_payment = False
+    if element_from in result:
+        element_from = True
+    if element_to in result:
+        to_payment = True
+
+    return (from_payment, to_payment)
 
 def get_graphs():
     graphs = {
@@ -42,7 +64,7 @@ def get_graphs():
 
     return graphs
 
-def main_expenses(db, total, id):
+def main_expenses(db, id):
     query = """
     SELECT te.name, SUM(value)
     FROM transactions AS tr
@@ -51,82 +73,49 @@ def main_expenses(db, total, id):
     INNER JOIN users ON users.id=tr.id_user
     WHERE tr.id_user=?
     GROUP BY te.name
-    UNION
-    SELECT pc.name, SUM(value)
-    FROM transactions AS tr
-    INNER JOIN payer AS p ON tr.id_to=p.id
-    INNER JOIN payment_content AS pc ON p.id_payment=pc.id
-    WHERE tr.id_user=?
-    GROUP BY pc.name
-    ORDER BY SUM(value) DESC
+    ORDER BY SUM(value)
     """
-    data_one = base_graph_static(db, query, (id, id))
+    data_one = base_graph_static(db, query, (id, ))
 
-    query = """
-    SELECT pc.name, SUM(value)
-    FROM transactions AS tr
-    INNER JOIN yield AS yi ON tr.id_from=yi.id
-    INNER JOIN payment_content AS pc ON yi.id_payment=pc.id
-    WHERE tr.id_user=?
-    GROUP BY pc.name
-    ORDER BY SUM(value) DESC
-    """
-    data_two = base_graph_static(db, query, (id, ))
-    keys = [data_one[index]["title"] for index in range(len(data_one))]
-    for graph in data_two:
-        if graph["title"] in keys:
-            index = keys.index(graph["title"])
-            data_one[index]["value"] -= graph["value"]
-    total = sum([graph["value"] for graph in data_one])
-    data_one = sorted(data_one, key=lambda x: x["value"], reverse=True)
-    if len(data_one) >= 10:
-        size = 10
-    else:
-        size = len(data_one)
-    for i in range(size):
-        data_one[i]["percen"] = data_one[i]["value"] / total
+    return get_final_data(data_one)
 
-    return data_one[:10]
-
-def category_expenses(db, total, id):
+def category_expenses(db, id):
     query = """
     SELECT cat.name, SUM(value) FROM transactions AS tr
-    INNER JOIN categorys AS cat ON cat.id=tr.id_category
     INNER JOIN payer AS py ON py.id=tr.id_to
     INNER JOIN teller AS te ON te.id=py.id_teller
+    INNER JOIN categorys AS cat ON cat.id=te.id_category
     WHERE tr.id_user=?
     GROUP BY cat.name
-    ORDER BY SUM(value) DESC
+    ORDER BY SUM(value) DESC;
     """
     data_one = base_graph_static(db, query, (id, ))
-    total = sum([graph["value"] for graph in data_one])
-    if len(data_one) >= 10:
-        size = 10
-    else:
-        size = len(data_one)
-    for i in range(size):
-        data_one[i]["percen"] = data_one[i]["value"] / total
-    return data_one
+    return get_final_data(data_one)
 
-def main_income(db, total, id):
+def main_income(db, id):
     query = """
     SELECT cat.name, SUM(value) FROM transactions AS tr
-    INNER JOIN categorys AS cat ON cat.id=tr.id_category
     INNER JOIN yield AS yi ON yi.id=tr.id_from
     INNER JOIN incomes AS inc ON inc.id=yi.id_income
+    INNER JOIN categorys AS cat ON cat.id=inc.id_category
     WHERE tr.id_user=?
     GROUP BY cat.name
     ORDER BY SUM(value) DESC
     """
     data_one = base_graph_static(db, query, (id, ))
-    total = sum([graph["value"] for graph in data_one])
-    if len(data_one) >= 10:
+    return get_final_data(data_one)
+
+def get_final_data(data):
+    total = sum([graph["value"] for graph in data])
+    if len(data) >= 10:
         size = 10
     else:
-        size = len(data_one)
+        size = len(data)
+    data = sorted(data, key=lambda y:y["value"], reverse=True)
     for i in range(size):
-        data_one[i]["percen"] = data_one[i]["value"] / total
-    return data_one
+        data[i]["percen"] = data[i]["value"] / total
+    return data[:size]
+
 
 def base_graph_static(db, query, bind):
     data = []

@@ -1,26 +1,30 @@
-.box-money {
-    text-align: center;
-    font-size: 1.2em;
-    padding: 0 2px;
-    width: 24%;
-    display: table-cell;
-    border: 0.5px solid black;
-    border-collapse: collapse;
+h2 {
+    font-size: 1.8em;
 }
 
-.box-title {
-    font-size: 1.3em;
+.painel {
+    margin: 0;
+    margin-top:2em;
 }
-
 
 .box-graph {
+    border-radius: 3px;
     text-align: center;
-    width: 45%;
+    max-width: 75%;
+    width: 400px;
+    min-width: 350px;
+    margin: 0.5em;
+    padding: 1em 0;
+    height: fit-content;
+    border: 0.5px solid #888;
 }
 
 .mt {
-    margin:0;
-    margin-top: 1em;
+    margin:1em 0;
+}
+
+.center {
+    text-align: center;
 }
 
 table {
@@ -38,24 +42,9 @@ tr, td, th {
     border: 0.5px solid #444;
 }
 
-
-@media screen and (max-width:850px) {
-    .box-money {
-        width: 45%;
-    }
-
-}
-
-@media screen and (max-width:920px) {
+@media screen and (max-width:500px) {
     .box-graph {
-        width: 100%;
-    }
-
-}
-
-@media screen and (max-width:400px) {
-    .box-graph {
-        font-size: 0.85em;
+        font-size: 0.9em;
     }
 
 }

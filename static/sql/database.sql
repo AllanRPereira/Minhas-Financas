@@ -16,16 +16,16 @@ CREATE TABLE categorys (
 
 CREATE TABLE transactions (
     id INTEGER NOT NULL,
+    name VARCHAR(25) NOT NULL,
     value REAL NOT NULL,
     timestamp INTEGER NOT NULL,
-    id_to INTEGER DEFAULT -1,
+    description VARCHAR(100) DEFAULT "",
+    id_to INTEGER NOT NULL,
     id_from INTEGER NOT NULL,
-    id_category INTEGER NOT NULL,
     id_user INTEGER NOT NULL,
     PRIMARY KEY(id),
     FOREIGN KEY(id_to) REFERENCES payer(id),
     FOREIGN KEY(id_from) REFERENCES yield(id),
-    FOREIGN KEY(id_category) REFERENCES categorys(id),
     FOREIGN KEY(id_user) REFERENCES user(id)
 );
 
@@ -80,7 +80,7 @@ CREATE TABLE incomes (
     id INTEGER NOT NULL,
     name VARCHAR(25),
     id_user INTEGER NOT NULL,
-    id_category INTEGER NOT NULL,
+    id_category INTEGER,
     PRIMARY KEY(id),
     FOREIGN KEY(id_user) REFERENCES users(id),
     FOREIGN KEY(id_category) REFERENCES categorys(id)

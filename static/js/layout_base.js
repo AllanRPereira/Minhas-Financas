@@ -1,17 +1,3 @@
-function check_size() {
-    // Function to change the nav bar to a button that shows the bar
-
-    let nav_element = document.getElementById("normal-nav");
-    let nav_mobile_element = document.getElementById("dropbox-mobile");
-    if (window.matchMedia("(max-width:875px)").matches) {
-        nav_element.style["display"] = "None";
-        nav_mobile_element.style["display"] = 'flex';
-    } else {
-        nav_element.style["display"] = "flex";
-        nav_mobile_element.style["display"] = 'None';
-    }
-}
-
 function dropbox_js(event) {    
     // Function that show and hide the elements of a dropbox
     let list;
@@ -62,6 +48,4 @@ window.addEventListener("load", function() {
         mob_dropbox.addEventListener("click", dropbox_js);
         mob_dropbox.addEventListener("click", dropbox_js);
     }
-    check_size();
-    window.addEventListener("resize", check_size);
-})
+});

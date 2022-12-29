@@ -7,13 +7,15 @@ import sqlite3
 import jwt
 import os
 from datetime import datetime
-from utils import login_required, brl, send_email, check_email, token_validity, percen, get_graphs
+from utils import login_required, brl, send_email, check_email, token_validity, percen, get_graphs, date_stamp, check_to_from
+from db_operations import insert_data_transaction
 
 app = Flask(__name__)
 
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.jinja_env.filters["brl"] = brl
 app.jinja_env.filters["percen"] = percen
+app.jinja_env.filters["date_stamp"] = date_stamp
 
 
 # Configure e-mail
@@ -97,7 +99,6 @@ def get_payments_balance():
     """
     for type_method in range(4):
         lastest_move = db.execute(query, (id_user, type_method)).fetchone()
-        print(lastest_move)
         if lastest_move != [] and lastest_move != None:
             payment_methods[type_method]["lastest_move"] = datetime.fromtimestamp(lastest_move[0])
 
@@ -118,13 +119,10 @@ def get_dict_payments():
 def get_statics():
     graphs_dict = get_graphs()
     db = get_db()
-    total = db.execute("SELECT SUM(value) FROM transactions WHERE id_user=?", (session["id_user"], )).fetchone()
-    if total != None and total != []:
-        total = total[0]
     id_user = session["id_user"]
 
     for title, graph in graphs_dict.copy().items():
-        graphs_dict[title]["data"] = graphs_dict[title]["func"](db, total, id_user)
+        graphs_dict[title]["data"] = graphs_dict[title]["func"](db, id_user)
     
     return graphs_dict
 
@@ -222,9 +220,111 @@ def confirmation():
     
     return success_handler("Conta criada com sucesso!")
 
-@app.route("/testHome", methods=["GET"])
-def testHome():
-    return render_template("index.html")
+@app.route("/transactions", methods=["GET"])
+@login_required
+def transactions():
+    db = get_db()
+    query = """
+    SELECT 
+    tr.name, tr.value, tr.timestamp, 
+    CASE 
+        WHEN yi.id_income != -1 THEN (SELECT inc.name FROM incomes AS inc WHERE inc.id=yi.id_income)
+        WHEN yi.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=yi.id_payment)
+    END,
+    CASE
+        WHEN pay.id_teller != -1 THEN (SELECT te.name FROM teller AS te WHERE te.id=pay.id_teller)
+        WHEN pay.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=pay.id_payment)
+    END
+    FROM transactions AS tr
+    INNER JOIN yield AS yi ON yi.id=tr.id_from
+    INNER JOIN payer AS pay ON pay.id=tr.id_to
+    WHERE tr.id_user=?
+    ORDER BY tr.timestamp;
+    """
+    data = {
+        "headers": ("Nome", "Valor", "Data", "Origem", "Destino")
+    }
+    query_result = db.execute(query, (session["id_user"], )).fetchall()
+    if query_result == None or query_result == []:
+        data["rows"] = ("-", "-", "-", "-", "-")
+    else:
+        data["rows"] = []
+        for row in query_result:
+            t = datetime.fromtimestamp(row[2])
+            element = {
+                "name" : row[0],
+                "value" : row[1],
+                "date" : datetime.fromtimestamp(row[2]),
+                "origin" : row[3],
+                "destination" : row[4]
+            }
+            data["rows"].append(element)
+
+    return render_template("transactions.html", data=data)
+
+@app.route("/creditcard", methods=["GET"])
+@login_required
+def creditcard():
+    return render_template("credit_card.html")
+
+@app.route("/debts", methods=["GET"])
+@login_required
+def debts():
+    return render_template("debts.html")
+
+@app.route("/investiments", methods=["GET"])
+@login_required
+def investiments():
+    return render_template("investiments.html")
+
+@app.route("/add/transaction", methods=["POST"])
+@login_required
+def add_transaction():
+    # name, value, datetime, to, from, description
+
+    if request.form.get("name") == "":
+        return error_handler("O nome não pode estar vazio")
+
+    if len(request.form.get("name")) > 25:
+        return error_handler("Nome não pode ter mais de 25 caracteres")
+
+    if request.form.get("value") == "":
+        return error_handler("O valor não pode estar vazio")
+    try:
+        value = request.form.get("value").replace(",", ".")
+        value = float(value)
+    except ValueError:
+        return error_handler("O valor deve ser um número real")
+    except Exception as error:
+        return error_handler(f"Um erro aconteceu {str(error)}")
+
+    if request.form.get("datetime") == "":
+        return error_handler("Uma data deve ser escolhida")
+    
+    if len(request.form.get("description")) > 100:
+        return error_handler("Descrição não pode ter mais de 100 caracteres")
+
+    db = get_db()
+    check = check_to_from(db, request.form.get("to"), request.form.get("from"), session["id_user"])
+    if check == None:
+        return error_handler("Destino e/ou origem das transações são inválidos")
+    
+    timestamp = datetime.fromisoformat(request.form.get("datetime")).timestamp()
+    data_insert = {
+        "name" : request.form.get("name"),
+        "value" : request.form.get("value"),
+        "timestamp" : timestamp,
+        "from" : request.form.get("from"),
+        "from_payment" : check[0],
+        "to" : request.form.get("to"),
+        "to_payment" : check[1],
+        "description" : request.form.get("description")
+    }
+    
+    id_trans = insert_data_transaction(db, data_insert)
+
+    return success_handler(f"Transação inserida: Id {id_trans}")
+    
 
 @app.route("/message", methods=["GET"])
 def message():
