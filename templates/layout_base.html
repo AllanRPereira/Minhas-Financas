@@ -7,11 +7,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="/static/css/base_style.css">
         <link rel="stylesheet" href="/static/css/layout_style.css">
-        {% block css %}{% endblock %}
+        {% block head %}{% endblock %}
         <script src="/static/js/layout_base.js"></script>
     </head>
     <body>
         <div class="container">
+            <div id="pop-up">
+                <div id="form-content">
+                    <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup();"></i>
+                    <h2>Dados da Transação</h2>
+                    <form autocomplete="off" id="add-transaction" method="POST" action="/add/transaction" onsubmit="return false;">
+                        <label for="name">Nome da transação:</label>
+                        <input type="text" name="name" placeholder="Ex.: Presente de Natal">
+                        
+                        <label for="value">Valor gasto:</label>
+                        <input type="number" name="value" placeholder="Ex.: 100, -100, ...">
+
+                        <label for="datetime">Data:</label>
+                        <input type="date" name="datetime" placeholder="19/8/2022">
+
+                        <label for="to">Destino da grana:</label>
+                        <input type="text" name="to" placeholder="Ex.: Amazon, Americanas ...">
+
+                        <label for="from">Origem da grana:</label>
+                        <input type="text" name="from" placeholder="Ex.: Carteira, Cartão ...">
+
+                        <label for="category">Categoria:</label>
+                        <input type="text" name="category" placeholder="Ex.:  Saúde, Educação ...">
+
+                        <label for="description">Descrição da transação:</label>
+                        <textarea name="description" rows="5" cols="20" placeholder="Ex.: Presentes para netos pago no cartão"></textarea>
+                        <button type="submit">Adicionar transação</button>
+                    </form>
+                </div>
+            </div>
             <header id="header-nav" class="col align-center">
                 <div id="div-mobile" class="row">
                     <h1 class="title">Minhas finanças</h1>
@@ -21,8 +50,8 @@
                             <a class="drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
                             <div class="mobile-dropbox">
                                 <a class="header drop-element font-1"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
-                                <a class="drop-element" style="display:none;font-size:0.9em;">Adicionar transação</a>
-                                <a class="drop-element" style="display:none;font-size:0.9em;">Ver transações</a>
+                                <a class="drop-element" style="display:none;font-size:0.9em;" onclick="show_popup()">Adicionar transação</a>
+                                <a class="drop-element" style="display:none;font-size:0.9em;" href="/transactions">Ver transações</a>
                             </div>
 
 
@@ -36,12 +65,12 @@
                 <nav id="normal-nav" class="row">
                     <div class="dropbox">
                         <a class="header drop-element" href="#"><i class="fa-solid fa-house"></i>&nbsp Início</a>
-                        <a class="drop-element" style="display:none;">Sair da conta</a>
+                        <a class="drop-element" href="{{ url_for('logout') }}" style="display:none;">Sair da conta</a>
                     </div>
                     <div class="dropbox">
                         <a class="header drop-element"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
-                        <a class="drop-element" style="display:none;">Adicionar transação</a>
-                        <a class="drop-element" style="display:none;">Ver transações</a>
+                        <a class="drop-element" style="display:none;" onclick="show_popup()">Adicionar transação</a>
+                        <a class="drop-element" style="display:none;" href="/transactions">Ver transações</a>
                     </div>
                     
                     <a class="nav-element" href="#"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>

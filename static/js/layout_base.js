@@ -3,7 +3,7 @@ function check_size() {
 
     let nav_element = document.getElementById("normal-nav");
     let nav_mobile_element = document.getElementById("dropbox-mobile");
-    if (window.matchMedia("(max-width:800px)").matches) {
+    if (window.matchMedia("(max-width:875px)").matches) {
         nav_element.style["display"] = "None";
         nav_mobile_element.style["display"] = 'flex';
     } else {
@@ -39,6 +39,16 @@ function show(element) {
     } else {
         drop_nav.className = 'show';
     }
+}
+
+function show_popup() {
+    popup = document.getElementById("pop-up");
+    popup.style["display"] = "flex";
+}
+
+function close_popup() {
+    popup = document.getElementById("pop-up");
+    popup.style["display"] = "none";
 }
 
 window.addEventListener("load", function() {

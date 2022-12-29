@@ -1,10 +1,15 @@
 .box-money {
     text-align: center;
+    font-size: 1.2em;
     padding: 0 2px;
     width: 24%;
     display: table-cell;
     border: 0.5px solid black;
     border-collapse: collapse;
+}
+
+.box-title {
+    font-size: 1.3em;
 }
 
 
@@ -22,7 +27,7 @@ table {
     border-collapse: collapse;
     margin: 0 auto;
     text-align:center;
-    font-size: 0.85em;
+    font-size: 1em;
 }
 
 th, td {
@@ -34,14 +39,14 @@ tr, td, th {
 }
 
 
-@media screen and (max-width:610px) {
+@media screen and (max-width:850px) {
     .box-money {
         width: 45%;
     }
 
 }
 
-@media screen and (max-width:800px) {
+@media screen and (max-width:920px) {
     .box-graph {
         width: 100%;
     }

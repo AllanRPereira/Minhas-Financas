@@ -8,7 +8,7 @@ function merge_border() {
     let balance_section = document.getElementById("balances");
 
     reset_border(balance_section);
-    if (window.matchMedia("(max-width:610px)").matches) {
+    if (window.matchMedia("(max-width:850px)").matches) {
         for (let i = 0; i < 2; i++) {
             balance_section.children[i].style["border-bottom"] = "0";
         }

@@ -1,11 +1,11 @@
 @font-face {
     font-family: lobstertwo;
-    src: url("/static/lobstertwo.ttf");
+    src: url("/static/fonts/lobstertwo.ttf");
 }
 
 @font-face {
     font-family: roboto;
-    src: url("/static/roboto.ttf");
+    src: url("/static/fonts/roboto.ttf");
 }
 
 ::placeholder {
@@ -36,6 +36,7 @@ input {
     padding: 0 0.5em;
     border:0;
     color:#555;
+    transition: all 0.15s;
     background-color:rgb(38, 235, 229, 0.2);
     border-bottom: 2px solid #2e86de;
 }
