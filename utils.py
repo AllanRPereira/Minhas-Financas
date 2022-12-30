@@ -20,7 +20,7 @@ def percen(string):
     return f"{100 * string:.1f}%"
 
 def date_stamp(t):
-    return f"{t.year}/{t.month}/{t.day}"
+    return f"{t.day}/{t.month}/{t.year}"
 
 def check_email(email):
     if email.find("@") == -1:

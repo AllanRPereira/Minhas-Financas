@@ -12,17 +12,21 @@ Dívidas
 <div class="col align-center">
     <h1 class="mt">Suas dívidas</h1>
     <section class="row wrap justify-center align-center w-100">
-        <div class="box text-center">
-            <p class="box-title">Sandra Bonanza</p>
-            <p class="box-balance">Dívida Atual:<wbr><span class="t-red">R$ -200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver alterações</button>
-                <button class="btn">Editar</button>
+        {% for debt in debts %}
+            <div class="box text-center">
+                <p class="box-title">{{ debt["title"] }}</p>
+            {% if debt['balance'] >= 0 %}
+                <p class="box-balance">Dívida Atual:<br><span class="t-green">{{ debt['balance'] | brl}}</span></p>
+            {% else %}
+                <p class="box-balance">Dívida Atual:<br><span class="t-red">{{ debt['balance'] | brl}}</span></p>
+            {% endif %}
+                <div class="row justify-center options">
+                    <button class="btn btn-primary">Ver alterações</button>
+                    <button class="btn">Editar</button>
+                </div>
+                <p class="muted">Última mudança: {{ debt["lastest_move"] | date_stamp}}!</p>
             </div>
-            <p class="muted">Última mudança: Data aqui!</p>
-        </div>
-
-        
+        {% endfor %}
     </section>
 </div>
 

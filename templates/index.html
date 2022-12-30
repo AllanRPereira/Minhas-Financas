@@ -25,7 +25,7 @@ Página Inicial
                         <p class="box-balance">Saldo: <span style="color:red"><wbr>{{ payment["balance"] | brl }}</span></p>
                     {% endif %}
                     {% if payment["lastest_move"] != 0 %}
-                        <p class="muted">Última movimentação:<wbr>&nbsp;{{ payment["lastest_move"] }}</p>
+                        <p class="muted">Última movimentação:<wbr>&nbsp;{{ payment["lastest_move"] | date_stamp }}</p>
                     {% else %}
                         <p class="muted">Última movimentação:<wbr>&nbsp;Inexistente</p>
                     {% endif %}

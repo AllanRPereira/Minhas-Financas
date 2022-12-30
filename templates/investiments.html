@@ -12,43 +12,22 @@ Investimentos
 <div class="col align-center">
     <h1 class="mt">Seus investimentos</h1>
     <section class="row wrap justify-center align-center w-100">
-        <div class="box text-center">
-            <p class="box-title">Caixinha Nubank</p>
-            <p class="box-balance">Investimento Atual:<br><span class="t-green">R$ +200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver alterações</button>
-                <button class="btn">Editar</button>
-            </div>
-            <p class="muted">Última mudança: Data aqui!</p>
-        </div>
-        <div class="box text-center">
-            <p class="box-title">Caixinha Nubank</p>
-            <p class="box-balance">Investimento Atual:<br><span class="t-green">R$ +200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver alterações</button>
-                <button class="btn">Editar</button>
-            </div>
-            <p class="muted">Última mudança: Data aqui!</p>
-        </div>
-        <div class="box text-center">
-            <p class="box-title">Caixinha Nubank</p>
-            <p class="box-balance">Investimento Atual:<br><span class="t-green">R$ +200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver alterações</button>
-                <button class="btn">Editar</button>
-            </div>
-            <p class="muted">Última mudança: Data aqui!</p>
-        </div>
-        <div class="box text-center">
-            <p class="box-title">Caixinha Nubank</p>
-            <p class="box-balance">Investimento Atual:<br><span class="t-green">R$ +200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver alterações</button>
-                <button class="btn">Editar</button>
-            </div>
-            <p class="muted">Última mudança: Data aqui!</p>
-        </div>
+        {% for investment in investments %}
+            <div class="box text-center">
+                <p class="box-title">{{ investment['title'] }}</p>
+            {% if investment['balance'] >= 0 %}
+                <p class="box-balance">Investimento Atual:<br><span class="t-green">{{ investment['balance'] | brl}}</span></p>
+            {% else %}
+                <p class="box-balance">Investimento Atual:<br><span class="t-red">{{ investment['balance'] | brl}}</span></p>
+            {% endif %}
 
+                <div class="row justify-center options">
+                    <button class="btn btn-primary">Ver alterações</button>
+                    <button class="btn">Editar</button>
+                </div>
+                <p class="muted">Última mudança: {{ investment["lastest_move"] | date_stamp }}</p>
+            </div>
+        {% endfor %}
         
     </section>
 </div>

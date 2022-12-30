@@ -98,7 +98,7 @@ for i in range(20):
     data_insert.append((
         cash,
         random_generator(size=10),
-        round(datetime.now().timestamp()),
+        round(datetime.now().timestamp() + i),
         id_payer,
         id_yield, 
         id_user

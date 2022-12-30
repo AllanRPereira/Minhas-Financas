@@ -119,6 +119,31 @@ nav {
     display: none;
 }
 
+.add {
+    border-radius: 3em;
+    height: 2.2em;
+    width: 2em;
+    margin-left: 2em;
+}
+
+.form-transaction {
+    display: flex;
+    width: 100%;
+    gap:0.5em;
+    flex-direction: column;
+}
+
+.pop-up {
+    z-index: 1;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
+    background-color: rgba(10, 10, 10, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
 #header-nav {
     width: 100%;
     position: relative;
@@ -164,17 +189,6 @@ nav {
     top:3.3em;
 }
 
-#pop-up {
-    z-index: 1;
-    height: 100vh;
-    position: fixed;
-    width: 100%;
-    background-color: rgba(10, 10, 10, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
 #close-button {
     width: 100%;
     text-align: right;
@@ -186,6 +200,14 @@ nav {
     color: red;
 }
 
+#alert-message {
+    padding: 0 1em;
+    color: white;
+    font-weight: 900;
+    border: 1px solid black;
+    border-radius: 3px;
+}
+
 #form-content {
     width: 50%;
     max-width: 370px;
@@ -195,17 +217,18 @@ nav {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 30em;
+    height: fit-content;
+    max-height: 30em;
     overflow-y:overlay;
     padding-right: 1.5em;
 }
-#form-content input, button, textarea {
+#form-content input, button, textarea, .btn-pure {
     line-height: 2.4em;
     font-size: 1em;
     margin: 0.5em 0;
 }
 
-#form-content input, textarea {
+#form-content input, textarea, .btn-pure {
     outline:0;
     padding: 0 0.5em;
     border:0;
@@ -213,6 +236,11 @@ nav {
     background-color:rgb(38, 235, 229, 0.2);
     border-bottom: 2px solid #2e86de;
     transition: all 0.15s;
+}
+
+.btn-pure {
+    height: 2.4em;
+    width: 80%;
 }
 
 #form-content input:focus-visible, textarea:focus-visible {
@@ -231,11 +259,6 @@ nav {
     background-color: #105191;
 }
 
-#add-transaction {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-}
 
 @media screen and (max-width:500px) {
     #btn-dropbox {

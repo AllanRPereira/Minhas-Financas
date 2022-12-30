@@ -27,18 +27,127 @@ function show(element) {
     }
 }
 
-function show_popup() {
-    popup = document.getElementById("pop-up");
+let opened_popup = "";
+function show_popup(element) {
+    popup = document.getElementById(`${element.attributes['value'].value}-pop-up`);
     popup.style["display"] = "flex";
+    opened_popup = popup;
+}
+
+function show_popup_by_id(id) {
+    popup = document.getElementById(id)
+    popup.style["display"] = "flex";
+    opened_popup = popup;
 }
 
 function close_popup() {
-    popup = document.getElementById("pop-up");
-    popup.style["display"] = "none";
+    if (opened_popup != "") {
+        opened_popup.style["display"] = "none";
+        opened_popup = "";
+    }
+}
+
+function change_popup(id_popup) {
+    if (opened_popup != "") {
+        close_popup();
+    }
+    show_popup_by_id(id_popup);
+}
+
+function show_message(message, code) {
+    title = document.getElementById("title-message");
+    p_message = document.getElementById("popup-message");
+    alert_message = document.getElementById("alert-message");
+    if (code == 200) {
+        alert_message.className = "green";
+        update_options();
+    } else {
+        alert_message.className = "red";
+    }
+    title.textContent = "Resultado da operação"
+    p_message.textContent = message;
+    change_popup("message-pop-up");
+}
+function update_options() {
+    let elements;
+    let dictionary = {
+        to_options : "to_select",
+        from_options : "from_select",
+        teller_category : "to_category_select",
+        income_category : "from_category_select"
+    };
+    fetch("/get_options", {
+        method : "GET"
+    }).then(function(response) {
+        response.json().then(function(elements) {
+            for (var key of Object.keys(dictionary)) {
+                let array_elements = elements[key];
+                let id = dictionary[key];
+                let select = document.getElementById(id);
+                let size = select.children.length;
+                for (let i = 1, c = 1; i < size; i++) {
+                    select.removeChild(select.children[c]);
+                }
+
+                for (var value of array_elements) {
+                    let element = document.createElement("option");
+                    value = value.charAt(0).toUpperCase() + value.toLowerCase().slice(1);
+                    element.value = value;
+                    element.textContent = value;
+                    select.appendChild(element);
+                }
+            }
+        });
+    });
 }
 
 window.addEventListener("load", function() {
     // Events listener for the elements in the layout_page
+
+    fromForm = document.getElementById("add-from");
+    fromForm.onsubmit = async function(event) {
+        event.preventDefault();
+        let responseAdd = fetch("/add/from", {
+            method : "POST",
+            body :  new FormData(fromForm)
+        });
+
+        let result = await responseAdd;
+        let message = await result.text();
+        show_message(message, result.status);
+
+    };
+
+    toForm = document.getElementById("add-to");
+    toForm.onsubmit = async function(event) {
+        event.preventDefault();
+        let responseAdd = fetch("/add/to", {
+            method : "POST",
+            body :  new FormData(toForm)
+        });
+
+        let result = await responseAdd;
+        let message = await result.text();
+        show_message(message, result.status);
+    };
+
+    addTransForm = document.getElementById("add-transaction-form");
+    addTransForm.onsubmit = async function(event) {
+        event.preventDefault();
+        let responseAdd = fetch("/add/transaction", {
+            method : "POST",
+            body : new FormData(addTransForm)
+        });
+        let result = await responseAdd;
+        let message = await result.text();
+        show_message(message, result.status);
+    }
+
+    window.addEventListener("keyup", function(event) {
+        if (event.key === "Escape") {
+            close_popup();
+        }
+    });
 
     for (let dropbox of document.getElementsByClassName("dropbox")) {
         dropbox.addEventListener("mouseenter", dropbox_js);

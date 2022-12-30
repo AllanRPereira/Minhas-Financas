@@ -34,7 +34,7 @@
 
 .muted {
     font-weight: 300;
-    font-size: 0.6em;
+    font-size: 0.8em;
 }
 
 .w-100 {
@@ -59,4 +59,8 @@
 
 .text-center {
     text-align: center;
+}
+
+.my {
+    margin:0.5em 0;
 }

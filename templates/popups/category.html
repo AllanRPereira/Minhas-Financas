@@ -1,0 +1,80 @@
+<div class="pop-up" id="to-pop-up">
+    <div id="form-content">
+        <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
+        <h2>Dados fonte de gasto</h2>
+        <form autocomplete="off" id="add-to" class="form-transaction" method="POST">
+            <label for="name">Nome do Destino:</label>
+            <input type="text" name="name" placeholder="Ex.: Aluguel, Mensalidade">
+            
+            <div class="col w-100 my">
+                <label for="category">Categoria:</label>
+                <div class="w-100 row align-center">
+                    <select id="to_category_select" class="btn-pure" name="category">
+                        <option selected value="">Ex.: Supermercado, Saúde, Lanche, ...</option>
+                        {% for category in teller_category  %}
+                            <option value="{{ category }}">{{ category.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                    <script>
+                        function show_to_hidden() {
+                            element = document.getElementById("new_category_to");
+                            if (element.type == "hidden") {
+                                element.type = "text";
+                            } else {
+                                element.type = "hidden";
+                            }
+                        }
+                    </script>
+                    <button class="add" id="add-to-option" type="button" onclick="return show_to_hidden();"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+            <label class="muted">Obs.: Crie uma clicando ao lado</label>
+            <input type="hidden" id="new_category_to" name="new_category" value="" placeholder="Digite a nova categoria">
+
+            <button type="submit" onclick="show_to_hidden();">Adicionar destino</button>
+        </form>
+    </div>
+</div>
+
+<div class="pop-up" id="from-pop-up">
+    <div id="form-content">
+        <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
+        <h2>Dados fonte de grana</h2>
+
+        <form autocomplete="off" id="add-from" class="form-transaction" method="POST">
+            <label for="name">Nome da Origem:</label>
+            <input type="text" name="name" placeholder="Ex.: Salário Jovem Aprendiz">
+            
+            <div class="col w-100 my">
+                <label for="category">Categoria da Origem:</label>
+                <div class="w-100 row align-center">
+                    <select id="from_category_select" class="btn-pure" name="category">
+                        <option selected value="">Ex.: Salário, Presente, ...</option>
+                        {% for category in income_category  %}
+                            <option value="{{ category }}">{{ category.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                    <script>
+                        function show_from_hidden() {
+                            element = document.getElementById("new_category_to");
+                            if (element.type == "hidden") {
+                                element.type = "text";
+                            } else {
+                                element.type = "hidden";
+                            }
+                        }
+                    </script>
+                    <button class="add" id="add-from-option" type="button" onclick="return show_from_hidden();"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <label class="muted">Obs.: Crie uma clicando ao lado</label>
+                <input type="hidden" id="new_category_from" name="new_category" value="" placeholder="Digite a nova categoria">
+            </div>
+
+            <button type="submit" onclick="show_from_hidden();">Adicionar origem</button>
+        </form>
+
+        <script>
+            
+        </script>
+    </div>
+</div>

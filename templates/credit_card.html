@@ -12,17 +12,21 @@ Cartões de Crédito
 <div class="col align-center">
     <h1 class="mt">Seus cartões de crédito</h1>
     <section class="row wrap justify-center align-center w-100">
-        <div class="box text-center">
-            <p class="box-title">Nubank</p>
-            <p class="box-balance">Fatura Atual:<wbr><span class="t-red">R$ -200,00</span></p>
-            <div class="row justify-center options">
-                <button class="btn btn-primary">Ver fatura</button>
-                <button class="btn">Editar cartão</button>
+        {% for card in cards %}
+            <div class="box text-center">
+                <p class="box-title">{{ card['title'] }}</p>
+            {% if card['balance'] >= 0 %}
+                <p class="box-balance">Fatura Atual:<br><span class="t-green">{{ card['balance'] | brl}}</span></p>
+            {% else %}
+                <p class="box-balance">Fatura Atual:<br><span class="t-red">{{ card['balance'] | brl}}</span></p>
+            {% endif %}
+                <div class="row justify-center options">
+                    <button class="btn btn-primary">Ver fatura</button>
+                    <button class="btn">Editar cartão</button>
+                </div>
+                <p class="muted">Última movimentação: {{ card['lastest_move'] | date_stamp }}</p>
             </div>
-            <p class="muted">Última movimentação: Data aqui!</p>
-        </div>
-
-        
+        {% endfor %}
     </section>
 </div>
 
