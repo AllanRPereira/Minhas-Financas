@@ -302,6 +302,11 @@ def creditcard():
     options = get_options()
     return render_template("credit_card.html", cards=creditcard, **options)
 
+@app.route("/add/creditcard", methods=["POST"])
+@login_required
+def add_credit_card():
+    return "TODO", 400
+
 @app.route("/debts", methods=["GET"])
 @login_required
 def debts():
@@ -310,6 +315,11 @@ def debts():
     options = get_options()
     return render_template("debts.html", debts=debts, **options)
 
+@app.route("/add/debt", methods=["POST"])
+@login_required
+def add_debt():
+    return "TODO", 400
+
 @app.route("/investiments", methods=["GET"])
 @login_required
 def investiments():
@@ -317,6 +327,11 @@ def investiments():
     investments = get_data_payment(db, INVESTMENTS)
     options = get_options()
     return render_template("investiments.html", investments=investments, **options)
+
+@app.route("/add/investiment", methods=["POST"])
+@login_required
+def add_investiment():
+    return "TODO", 400
 
 @app.route("/add/transaction", methods=["POST"])
 @login_required
@@ -417,11 +432,12 @@ def check_add_to_from():
 @app.route("/message", methods=["GET"])
 def message():
     if 'msg' not in session:
-        return render_template("message.html", status="none", type="Sem dados", content="Nenhuma mensagem"), 200
+        return render_template("message_page.html", status="none", type="Sem dados", content="Nenhuma mensagem"), 200
 
     msg = session["msg"].copy()
     session.pop("msg")
-    return render_template("message.html", **msg), msg["code"]
+    return render_template("message_page.html", **msg), msg["code"]
+
 
 
 def error_handler(error):
@@ -443,14 +459,3 @@ def success_handler(success):
     }
     session['msg'] = payload
     return redirect(url_for("message"))
-
-@app.route("/test", methods=["GET"])
-def test():
-    return render_template("test.html")
-
-@app.route("/testPost", methods=["POST"])
-def testPost():
-    if request.form.get("name") == "Madara":
-        return "Excelente", 200
-    else:
-        return "Merda"

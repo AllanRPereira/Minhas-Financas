@@ -2,7 +2,7 @@
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2>Dados da Transação</h2>
-        <form autocomplete="off" id="add-transaction-form" class="form-transaction" method="POST" action="{{ url_for('add_transaction') }}">
+        <form autocomplete="off" id="add-transaction-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_transaction') }}">
             <label for="name">Nome da transação:</label>
             <input type="text" name="name" placeholder="Ex.: Presente de Natal">
             

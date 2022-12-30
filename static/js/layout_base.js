@@ -104,43 +104,20 @@ function update_options() {
 window.addEventListener("load", function() {
     // Events listener for the elements in the layout_page
 
-    fromForm = document.getElementById("add-from");
-    fromForm.onsubmit = async function(event) {
-        event.preventDefault();
-        let responseAdd = fetch("/add/from", {
-            method : "POST",
-            body :  new FormData(fromForm)
-        });
-
-        let result = await responseAdd;
-        let message = await result.text();
-        show_message(message, result.status);
-
-    };
-
-    toForm = document.getElementById("add-to");
-    toForm.onsubmit = async function(event) {
-        event.preventDefault();
-        let responseAdd = fetch("/add/to", {
-            method : "POST",
-            body :  new FormData(toForm)
-        });
-
-        let result = await responseAdd;
-        let message = await result.text();
-        show_message(message, result.status);
-    };
-
-    addTransForm = document.getElementById("add-transaction-form");
-    addTransForm.onsubmit = async function(event) {
-        event.preventDefault();
-        let responseAdd = fetch("/add/transaction", {
-            method : "POST",
-            body : new FormData(addTransForm)
-        });
-        let result = await responseAdd;
-        let message = await result.text();
-        show_message(message, result.status);
+    forms = document.getElementsByClassName("onformsubmit");
+    for (var form of forms) {
+        url_form = form.action;
+        form.onsubmit = async function(event) {
+            event.preventDefault();
+            let responseAdd = fetch(url_form, {
+                method : "POST",
+                body :  new FormData(fromForm)
+            });
+    
+            let result = await responseAdd;
+            let message = await result.text();
+            show_message(message, result.status);
+        }
     }
 
     window.addEventListener("keyup", function(event) {

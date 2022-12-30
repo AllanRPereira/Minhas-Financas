@@ -1,0 +1,15 @@
+<div class="pop-up" id="credit-pop-up">
+    <div id="form-content">
+        <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
+        <h2>Dados do Cartão de Crédito</h2>
+        <form autocomplete="off" id="add-credit-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_credit_card') }}">
+            <label for="name">Nome do cartão:</label>
+            <input type="text" name="name" placeholder="Ex.: Picpay">
+            <label for="due_date">Vencimento:</label>
+            <input type="date" name="due_date">
+            <label for="initial_bill">Fatura atual:</label> 
+            <input type="text" name="initial_bill" placeholder="R$-208,00">
+            <button type="submit">Adicionar cartão</button>
+        </form>
+    </div>
+</div>
