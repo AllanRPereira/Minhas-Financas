@@ -73,7 +73,7 @@ def index():
     graphs = get_statics()
     options = get_options()
 
-    return render_template("index.html",payments=payments_balance, graphs=graphs, **options)
+    return render_template("main/index.html",payments=payments_balance, graphs=graphs, **options)
 
 @app.route("/get_options", methods=["GET"])
 @login_required
@@ -161,7 +161,7 @@ def get_statics():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("main/login.html")
     
     if request.method == "POST":
         if not check_email(request.form.get("email")):
@@ -194,7 +194,7 @@ def logout():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
-        return render_template("register.html")
+        return render_template("main/register.html")
     if request.method == "POST":
         if not check_email(request.form.get("email")):
             return error_handler("Email é inválido")
@@ -292,7 +292,7 @@ def transactions():
             }
             data["rows"].append(element)
 
-    return render_template("transactions.html", data=data)
+    return render_template("main/transactions.html", data=data)
 
 @app.route("/creditcard", methods=["GET"])
 @login_required
@@ -300,7 +300,7 @@ def creditcard():
     db = get_db()
     creditcard = get_data_payment(db, CREDIT_CARD)
     options = get_options()
-    return render_template("credit_card.html", cards=creditcard, **options)
+    return render_template("main/credit_card.html", cards=creditcard, **options)
 
 @app.route("/add/creditcard", methods=["POST"])
 @login_required
@@ -313,7 +313,7 @@ def debts():
     db = get_db()
     debts = get_data_payment(db, DEBTS)
     options = get_options()
-    return render_template("debts.html", debts=debts, **options)
+    return render_template("main/debts.html", debts=debts, **options)
 
 @app.route("/add/debt", methods=["POST"])
 @login_required
@@ -326,7 +326,7 @@ def investiments():
     db = get_db()
     investments = get_data_payment(db, INVESTMENTS)
     options = get_options()
-    return render_template("investiments.html", investments=investments, **options)
+    return render_template("main/investiments.html", investments=investments, **options)
 
 @app.route("/add/investiment", methods=["POST"])
 @login_required
@@ -432,11 +432,11 @@ def check_add_to_from():
 @app.route("/message", methods=["GET"])
 def message():
     if 'msg' not in session:
-        return render_template("message_page.html", status="none", type="Sem dados", content="Nenhuma mensagem"), 200
+        return render_template("main/message_page.html", status="none", type="Sem dados", content="Nenhuma mensagem"), 200
 
     msg = session["msg"].copy()
     session.pop("msg")
-    return render_template("message_page.html", **msg), msg["code"]
+    return render_template("main/message_page.html", **msg), msg["code"]
 
 
 
