@@ -11,24 +11,28 @@ Dívidas
 
 {% block main %}
 <div class="col align-center">
+
+    {% include "./popups/add_debt.html" %}
+
     <h1 class="mt">Suas dívidas</h1>
     <section class="row wrap justify-center align-center w-100">
         {% for debt in debts %}
             <div class="box text-center">
-                <p class="box-title">{{ debt["title"] }}</p>
+                <p class="box-title">{{ debt["title"].capitalize() }}</p>
             {% if debt['balance'] >= 0 %}
                 <p class="box-balance">Dívida Atual:<br><span class="t-green">{{ debt['balance'] | brl}}</span></p>
             {% else %}
                 <p class="box-balance">Dívida Atual:<br><span class="t-red">{{ debt['balance'] | brl}}</span></p>
             {% endif %}
                 <div class="row justify-center options">
-                    <button class="btn btn-primary">Ver alterações</button>
+                    <button class="btn btn-primary" href="/transactions/debt/{{ debt['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
                     <button class="btn">Editar</button>
                 </div>
-                <p class="muted">Última mudança: {{ debt["lastest_move"] | date_stamp}}!</p>
+                <p class="muted">Última mudança:<br>{{ debt["lastest_move"] | date_stamp}}!</p>
             </div>
         {% endfor %}
     </section>
+    <button class="btn btn-primary" value="debt" onclick="show_popup(this)">Adicionar Dívida</button>
 </div>
 
 

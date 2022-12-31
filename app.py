@@ -2,13 +2,14 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from flask_session import Session
 from flask_mail import Mail, Message
 from tempfile import mkdtemp
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import jwt
 import os
 from datetime import datetime
 from utils import login_required, brl, send_email, check_email, token_validity, percen, get_graphs, date_stamp, check_to_from
-from db_operations import insert_data_transaction, get_data_payment, get_to_options, get_from_options, get_payment_options, get_categorys, add_category, add_income, add_teller
+from db_operations import insert_data_transaction, get_data_payment, get_to_options, get_from_options, get_payment_options, get_categorys, add_category, add_income, add_teller, add_payment, get_ids_payment_type
 
 app = Flask(__name__)
 
@@ -124,15 +125,22 @@ def get_payments_balance():
     
     query = """
     SELECT MAX(tr.timestamp) FROM payment_content AS pay
-    INNER JOIN transactions AS tr ON tr.id_user=pay.id_user
-    INNER JOIN payer AS py ON tr.id_to=py.id
-    INNER JOIN yield AS y ON tr.id_from=y.id
-    WHERE pay.id_user=? AND pay.type=?
+    INNER JOIN payer AS py ON py.id_payment=pay.id
+    INNER JOIN transactions AS tr ON py.id=tr.id_to
+    WHERE tr.id_user=? AND pay.type=?
+    UNION
+    SELECT MAX(tr.timestamp) FROM payment_content AS pay
+    INNER JOIN yield AS y ON y.id_payment=pay.id
+    INNER JOIN transactions AS tr ON y.id=tr.id_from
+    WHERE tr.id_user=? AND pay.type=?
+    ORDER BY MAX(tr.timestamp) DESC
+    LIMIT 1
     """
     for type_method in range(4):
-        lastest_move = db.execute(query, (id_user, type_method)).fetchone()
-        if lastest_move != [] and lastest_move != None:
-            payment_methods[type_method]["lastest_move"] = datetime.fromtimestamp(lastest_move[0])
+        lastest_move = db.execute(query, (id_user, type_method, id_user, type_method)).fetchone()
+        if lastest_move != []:
+            if lastest_move[0] != None:
+                payment_methods[type_method]["lastest_move"] = datetime.fromtimestamp(lastest_move[0])
 
     return payment_methods
 
@@ -143,7 +151,8 @@ def get_dict_payments():
         payment = {
             "title": title,
             "balance": 0,
-            "lastest_move": 0
+            "lastest_move": 0,
+            "id" : "/"
         }
         payment_methods.append(payment)
     return payment_methods
@@ -182,7 +191,7 @@ def login():
         
         session["id_user"] = data[0]
         return redirect("/")
-    
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -215,7 +224,7 @@ def register():
         payload = {
             "id": token_id,
             "type": 0,
-            "email": request.form.get("email"),
+            "email": request.form.get("email").lower(),
             "hash": str(hash),
             "timestamp": datetime.now().timestamp()
         }
@@ -246,17 +255,80 @@ def confirmation():
         return error_handler(content)
     
     try:
-        db.execute("INSERT INTO users (email, password) VALUES (?, ?)", (token_data["email"], token_data["hash"]))
+        id_user = db.execute("INSERT INTO users (email, password) VALUES (?, ?)", (token_data["email"], token_data["hash"])).lastrowid
+        names = ("Carteira", "Cartão de Crédito", "Investimentos", "Dívidas")
+        for i in range(4): # Four payment methods
+            db.execute("INSERT INTO payment_content (id_user, type, name) VALUES (?,?,?)",
+                        (id_user, i, names[i]))
     except Exception as error:
         return error_handler(str(error))
     
     return success_handler("Conta criada com sucesso!")
 
+@app.route("/recovery", methods=["GET", "POST"])
+def recovery():
+    db = get_db()
+
+    if request.method == "GET":
+        if request.args.get("token") == None:
+            return render_template("main/recovery.html", recovery=True)
+        else:
+            return render_template("main/recovery.html", recovery=False, token=request.args.get("token"))
+
+    if request.method == "POST":
+        email = request.form.get("email").lower()
+        if not check_email(email):
+            return error_handler("Email inválido!")
+        
+        query = "SELECT id FROM users WHERE email=?"
+        result = db.execute(query, (email, )).fetchone()
+        if result != None and result != []:
+            id_user = result[0]
+            id_token = db.execute("INSERT INTO tokens (id_user, type) VALUES (?, ?)", (id_user, 1)).lastrowid
+            payload = {
+                "id" : id_token,
+                "id_user" : id_user,
+                "type" : 1,
+                "timestamp": round(datetime.now().timestamp(), 2)
+            }
+            recover_token = jwt.encode(payload, TOKEN_KEY, algorithm="HS256")
+            content = render_template("mail/mail_recovery.html", token=recover_token)
+            status, response = send_email(mail, "Minhas Finanças: Recuperação de senha", content, email)
+            if not status:
+                return error_handler(response)
+
+        return success_handler("Email enviado com sucesso!")
+
+@app.route("/recovery/set", methods=["POST"])
+def recovery_set():
+    password = request.form.get("password")
+    confirmation = request.form.get("confirmation")
+    token = request.form.get("token")
+    try:
+        token_data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
+    except Exception as error:
+        return error_handler("Token não é válido!")
+
+    if password == "" or password == None:
+        return error_handler("Campo de senha deve ser preenchido corretamente")
+    if password != confirmation:
+        return error_handler("Campos de senha não são iguais!")
+
+    db = get_db()
+    status, content = token_validity(db, token_data)
+    if not status:
+        return error_handler(content)
+    hash = generate_password_hash(password)
+    query = "UPDATE users SET password=? WHERE id=?"
+    db.execute(query, (hash, token_data["id_user"]))
+
+    return success_handler("Senha alterada com sucesso!")
+
 @app.route("/transactions", methods=["GET"])
 @login_required
-def transactions():
+def transactions(filter=""):
     db = get_db()
-    query = """
+    query = f"""
     SELECT 
     tr.name, tr.value, tr.timestamp, 
     CASE 
@@ -270,14 +342,15 @@ def transactions():
     FROM transactions AS tr
     INNER JOIN yield AS yi ON yi.id=tr.id_from
     INNER JOIN payer AS pay ON pay.id=tr.id_to
-    WHERE tr.id_user=?
+    WHERE tr.id_user=? {filter}
     ORDER BY tr.timestamp;
     """
     data = {
         "headers": ("Nome", "Valor", "Data", "Origem", "Destino")
     }
     query_result = db.execute(query, (session["id_user"], )).fetchall()
-    if query_result == None or query_result == []:
+    print(query_result)
+    if query_result == [None, ]:
         data["rows"] = ("-", "-", "-", "-", "-")
     else:
         data["rows"] = []
@@ -294,6 +367,28 @@ def transactions():
 
     return render_template("main/transactions.html", data=data)
 
+
+@app.route("/transactions/<string:type_pay>/<int:id>", methods=["GET"])
+@login_required
+def filter_transactions(type_pay, id):
+    dict_operator = {
+        "creditcard" : CREDIT_CARD,
+        "investment" : INVESTMENTS,
+        "debt" : DEBTS
+    }
+    if type_pay in dict_operator:
+        db = get_db()
+        ids = get_ids_payment_type(db, dict_operator[type_pay])
+        if id >= len(ids):
+            return error_handler("Opção Inválida!")
+        id_pay = ids[id][0]
+        filter_query = f"""
+        AND ( (pay.id_payment != -1 OR yi.id_payment != -1) AND (pay.id_payment={id_pay} OR yi.id_payment={id_pay}) )
+        """
+        return transactions(filter=filter_query)
+    
+    return error_handler("URL inválida!")
+
 @app.route("/creditcard", methods=["GET"])
 @login_required
 def creditcard():
@@ -305,7 +400,25 @@ def creditcard():
 @app.route("/add/creditcard", methods=["POST"])
 @login_required
 def add_credit_card():
-    return "TODO", 400
+    name = request.form.get("name")
+    due_date = request.form.get("due_date")
+    initial_bill = request.form.get("initial_bill").upper().replace("R$", "").replace(",", ".").replace(" ", "")
+    status, content = check_name(name)
+    if not status:
+        return content
+    try:
+        initial_bill = float(initial_bill)
+    except ValueError:
+        return ("A fatura inicial deve ser um número", 400)
+    
+    try:
+        due_date = datetime.fromisoformat(due_date).timestamp()
+    except Exception as error:
+        return ("Campo de data não é valido "+ str(error), 400)
+    
+    
+    db = get_db()
+    return add_payment(db, name, initial_bill, CREDIT_CARD)
 
 @app.route("/debts", methods=["GET"])
 @login_required
@@ -318,7 +431,29 @@ def debts():
 @app.route("/add/debt", methods=["POST"])
 @login_required
 def add_debt():
-    return "TODO", 400
+    name = request.form.get("name")
+    date_debt = request.form.get("debt_date")
+    current_amount = request.form.get("debt_value").upper().replace("R$", "").replace(",", ".").replace(" ", "")
+    status, content = check_name(name)
+    if not status:
+        return content
+
+    if len(name) > 25:
+        return ("Nome deve ter menos de 25 letras", 400)
+    try:
+        current_amount = float(current_amount)
+    except ValueError:
+        return ("Rendimento deve ser número", 400)
+    
+    try:
+        date_debt = datetime.fromisoformat(date_debt).timestamp()
+    except Exception as error:
+        return ("Campo de data não é valido "+ str(error), 400)
+    
+    
+    db = get_db()
+    return add_payment(db, name, current_amount, DEBTS)
+
 
 @app.route("/investiments", methods=["GET"])
 @login_required
@@ -331,22 +466,34 @@ def investiments():
 @app.route("/add/investiment", methods=["POST"])
 @login_required
 def add_investiment():
-    return "TODO", 400
+    name = request.form.get("name")
+    rendiment = request.form.get("rendiment").replace("%", "").replace(",", ".")
+    current_amount = request.form.get("current_amount").upper().replace("R$", "").replace(",", ".")
+    status, content = check_name(name)
+    if not status:
+        return content
+
+    try:
+        rendiment = float(rendiment)
+        current_amount = float(current_amount)
+    except ValueError:
+        return ("Rendimento e quantidade devem ser número", 400)
+    
+    db = get_db()
+    return add_payment(db, name, current_amount, INVESTMENTS)
 
 @app.route("/add/transaction", methods=["POST"])
 @login_required
 def add_transaction():
-    if request.form.get("name") == "":
-        return ("O nome não pode estar vazio", 400)
-
-    if len(request.form.get("name")) > 25:
-        return ("Nome não pode ter mais de 25 caracteres", 400)
+    status, content = check_name(request.form.get("name"))
+    if not status:
+        return content
 
     if request.form.get("value") == "":
         return ("O valor não pode estar vazio", 400)
     try:
         value = request.form.get("value").replace(",", ".")
-        value = float(value)
+        value = abs(float(value))
     except ValueError:
         return ("O valor deve ser um número real", 400)
     except Exception as error:
@@ -365,19 +512,26 @@ def add_transaction():
     
     timestamp = datetime.fromisoformat(request.form.get("datetime")).timestamp()
     data_insert = {
-        "name" : request.form.get("name"),
+        "name" : request.form.get("name").lower(),
         "value" : value,
         "timestamp" : timestamp,
-        "from" : request.form.get("from"),
+        "from" : request.form.get("from").lower(),
         "from_payment" : check[0],
-        "to" : request.form.get("to"),
+        "to" : request.form.get("to").lower(),
         "to_payment" : check[1],
         "description" : request.form.get("description")
     }
     
     id_trans = insert_data_transaction(db, data_insert)
 
-    return (f"Transação inserida com sucesso: Id {id_trans}", 200)
+    return (f"Transação inserida com sucesso", 200)
+
+def check_name(name):
+    if name == None or name == "":
+        return ("Nome não pode ser nulo", 400)
+    if len(name) > 25:
+        return ("Nome deve ter menos de 25 letras", 400)
+    return (True, "")
 
 @app.route("/add/to", methods=["POST"])
 @login_required
@@ -438,8 +592,6 @@ def message():
     session.pop("msg")
     return render_template("main/message_page.html", **msg), msg["code"]
 
-
-
 def error_handler(error):
     payload = {
         "status": "error",
@@ -459,3 +611,12 @@ def success_handler(success):
     }
     session['msg'] = payload
     return redirect(url_for("message"))
+
+def internal_error(error):
+    if not isinstance(error, HTTPException):
+        error = InternalServerError()
+    return error_handler(f"Algo deu errado:{error.code} / {error.name}")
+
+
+for code in default_exceptions:
+    app.errorhandler(code)(internal_error)

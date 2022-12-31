@@ -69,7 +69,6 @@ function show_message(message, code) {
     change_popup("message-pop-up");
 }
 function update_options() {
-    let elements;
     let dictionary = {
         to_options : "to_select",
         from_options : "from_select",
@@ -101,17 +100,22 @@ function update_options() {
     });
 }
 
+function transfer(button) {
+    window.location.assign(button.attributes.href.value);
+}
+
 window.addEventListener("load", function() {
     // Events listener for the elements in the layout_page
 
     forms = document.getElementsByClassName("onformsubmit");
-    for (var form of forms) {
-        url_form = form.action;
+    for (let form of forms) {
+        let url_form = form.action;
+        console.log(form, url_form);
         form.onsubmit = async function(event) {
             event.preventDefault();
             let responseAdd = fetch(url_form, {
                 method : "POST",
-                body :  new FormData(fromForm)
+                body :  new FormData(form)
             });
     
             let result = await responseAdd;

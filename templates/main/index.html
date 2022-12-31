@@ -49,7 +49,7 @@ Página Inicial
                         <tbody>
                             {% for data in graph["data"] %}
                                 <tr>
-                                    <td>{{ data["title"] }}</td>
+                                    <td>{{ data["title"].capitalize() }}</td>
                                     <td>{{ data["value"] | brl }}</td>
                                     <td>{{ data["percen"] | percen }}</td>
                                 </tr>

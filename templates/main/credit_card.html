@@ -10,24 +10,29 @@ Cartões de Crédito
 
 {% block main %}
 <div class="col align-center">
+
+    {% include "./popups/add_credit_card.html" %}
+
     <h1 class="mt">Seus cartões de crédito</h1>
     <section class="row wrap justify-center align-center w-100">
         {% for card in cards %}
             <div class="box text-center">
-                <p class="box-title">{{ card['title'] }}</p>
+                <p class="box-title">{{ card['title'].capitalize() }}</p>
             {% if card['balance'] >= 0 %}
                 <p class="box-balance">Fatura Atual:<br><span class="t-green">{{ card['balance'] | brl}}</span></p>
             {% else %}
                 <p class="box-balance">Fatura Atual:<br><span class="t-red">{{ card['balance'] | brl}}</span></p>
             {% endif %}
                 <div class="row justify-center options">
-                    <button class="btn btn-primary">Ver fatura</button>
-                    <button class="btn">Editar cartão</button>
+                    <button type="button" href="/transactions/creditcard/{{ card['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver fatura</button>
+                    <button type="button" href="/" class="btn">Editar cartão</button>
                 </div>
-                <p class="muted">Última movimentação: {{ card['lastest_move'] | date_stamp }}</p>
+                <p class="muted">Última movimentação:<br>{{ card['lastest_move'] | date_stamp }}</p>
             </div>
         {% endfor %}
     </section>
+    <button class="btn btn-primary" value="credit" onclick="show_popup(this)">Adicionar Cartão</button>
+
 </div>
 
 

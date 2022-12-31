@@ -35,7 +35,6 @@ CREATE TABLE payment_content (
     type INTEGER NOT NULL,
     name VARCHAR(25),
     balance REAL DEFAULT 0,
-    description VARCHAR(100),
     PRIMARY KEY(id),
     FOREIGN KEY(id_user) REFERENCES users(id)
 );

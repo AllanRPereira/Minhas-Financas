@@ -20,6 +20,8 @@ def percen(string):
     return f"{100 * string:.1f}%"
 
 def date_stamp(t):
+    if t == 0:
+        return "Não há"
     return f"{t.day}/{t.month}/{t.year}"
 
 def check_email(email):
@@ -36,11 +38,12 @@ def check_to_from(db, element_to, element_from, id):
     query = """
     SELECT LOWER(pay.name) FROM payment_content AS pay WHERE id_user=?
     """
-    result = db.execute(query, (id, )).fetchall()
+    data = db.execute(query, (id, )).fetchall()
+    result = [element[0] for element in data]
     to_payment = False
     from_payment = False
     if element_from in result:
-        element_from = True
+        from_payment = True
     if element_to in result:
         to_payment = True
 

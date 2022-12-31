@@ -9,12 +9,13 @@ Investimentos
 {% endblock %}
 
 {% block main %}
+
 <div class="col align-center">
     <h1 class="mt">Seus investimentos</h1>
     <section class="row wrap justify-center align-center w-100">
         {% for investment in investments %}
             <div class="box text-center">
-                <p class="box-title">{{ investment['title'] }}</p>
+                <p class="box-title">{{ investment['title'].capitalize() }}</p>
             {% if investment['balance'] >= 0 %}
                 <p class="box-balance">Investimento Atual:<br><span class="t-green">{{ investment['balance'] | brl}}</span></p>
             {% else %}
@@ -22,14 +23,14 @@ Investimentos
             {% endif %}
 
                 <div class="row justify-center options">
-                    <button class="btn btn-primary">Ver alterações</button>
+                    <button class="btn btn-primary" href="/transactions/investment/{{ investment['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
                     <button class="btn">Editar</button>
                 </div>
-                <p class="muted">Última mudança: {{ investment["lastest_move"] | date_stamp }}</p>
+                <p class="muted">Última mudança:<br>{{ investment["lastest_move"] | date_stamp }}</p>
             </div>
         {% endfor %}
-        
     </section>
+    <button class="btn btn-primary" value="invest" onclick="show_popup(this)">Adicionar Investimento</button>
 </div>
 
 

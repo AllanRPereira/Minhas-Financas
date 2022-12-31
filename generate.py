@@ -23,7 +23,7 @@ print(f"Id do usuário:{id_user}")
 
 # Formas de pagamento
 id_payments = [0, 0, 0, 0]
-id_payments[0] = db.execute("INSERT INTO payment_content (type, id_user, name, balance) VALUES (0, ?, 'Carteira', 10000)", (id_user, )).lastrowid
+id_payments[0] = db.execute("INSERT INTO payment_content (type, id_user, name, balance) VALUES (0, ?, 'Carteira', 100)", (id_user, )).lastrowid
 id_payments[1] = db.execute("INSERT INTO payment_content (type, id_user, name) VALUES (1, ?, 'Nubank')", (id_user, )).lastrowid
 id_payments[2] = db.execute("INSERT INTO payment_content (type, id_user, name) VALUES (2, ?, 'Caixinha Notebook')", (id_user, )).lastrowid
 id_payments[3] = db.execute("INSERT INTO payment_content (type, id_user, name) VALUES (3, ?, 'Dívida Sandra')", (id_user, )).lastrowid
@@ -79,10 +79,11 @@ for i in range(20):
     if result == 0:
         data_payer = (id_incomes[random.randint(0, 49)], )
         id_yield = db.execute("INSERT INTO yield (id_income) VALUES (?)", data_payer).lastrowid
+
     else:
         data_payer = (id_payments[id_from], )
         id_yield = db.execute("INSERT INTO yield (id_payment) VALUES (?)", data_payer).lastrowid
-
+        db.execute("UPDATE payment_content SET balance=balance-? WHERE id=?", (cash, data_payer[0]))
 
     if random.randint(0, 1) == 0:
         data_payer = (id_teller[random.randint(0, 49)], )

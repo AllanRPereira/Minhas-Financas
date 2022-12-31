@@ -131,6 +131,20 @@ button:hover {
     flex-direction: column;
 }
 
+#recovery_password {
+    font-weight: 600;
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    transition: all 0.1s;
+    width: fit-content;
+    border: 0.5px solid rgb(255, 255, 255, 0);
+}
+
+#recovery_password:hover {
+    color:#105191;
+    border-bottom: 0.5px solid #105191;
+}
+
 @media only screen and (max-width: 800px) and (min-height: 410px) {
     .container {
         height:100vh;

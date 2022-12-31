@@ -24,11 +24,11 @@ Transações
         <tbody>
             {% for row in data["rows"] %}
                 <tr>
-                    <td>{{row["name"]}}</td>
+                    <td>{{row["name"].capitalize() }}</td>
                     <td>{{row["value"] | brl}}</td>
                     <td>{{row["date"] | date_stamp }}</td>
-                    <td>{{row["origin"]}}</td>
-                    <td>{{row["destination"]}}</td>
+                    <td>{{row["origin"].capitalize() }}</td>
+                    <td>{{row["destination"].capitalize() }}</td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -1,8 +1,8 @@
-<div class="pop-up" id="credit-pop-up">
+<div class="pop-up" id="invest-pop-up">
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2>Dados do Investimento</h2>
-        <form autocomplete="off" id="add-credit-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_investiment') }}">
+        <form autocomplete="off" id="add-investment-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_investiment') }}">
             <label for="name">Nome do Investimento:</label>
             <input type="text" name="name" placeholder="Ex.: Picpay">
             <label for="rendiment">Rendimento Mensal:</label>

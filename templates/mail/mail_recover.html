@@ -1,8 +1,0 @@
-{% extends "../layouts/layout_mail.html" %}
-
-{% block message %}
-
-    <h2>Minhas Finanças</h2>
-    <p>Clique no link para alterar <wbr>a senha da sua conta <a href="{{ request.host + url('recover', token=token) }}">Recuperar senha</a></p>
-
-{% endblock %}

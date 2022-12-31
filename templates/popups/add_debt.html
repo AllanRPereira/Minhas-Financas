@@ -1,8 +1,8 @@
-<div class="pop-up" id="credit-pop-up">
+<div class="pop-up" id="debt-pop-up">
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2>Dados da Dívida</h2>
-        <form autocomplete="off" id="add-credit-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_debt') }}">
+        <form autocomplete="off" id="add-debt-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_debt') }}">
             <label for="name">Nome da dívida:</label>
             <input type="text" name="name" placeholder="Ex.: Dívida com Maria">
             <label for="debt_date">Data de pagamento:</label>
