@@ -28,19 +28,22 @@ function show(element) {
 }
 
 let opened_popup = "";
-function show_popup(element) {
-    popup = document.getElementById(`${element.attributes['value'].value}-pop-up`);
-    popup.style["display"] = "flex";
-    opened_popup = popup;
-}
+function show_popup(element="", id="") {
+    // Função utilizada para exibir uma mensagem que abrange a tela
+    // Utilizada para exibir os formulários de adicionar (Cartão, Inves, ...)
 
-function show_popup_by_id(id) {
-    popup = document.getElementById(id)
+    if (id == "") {
+        popup = document.getElementById(`${element.attributes['value'].value}-pop-up`);
+    } else {
+        popup = document.getElementById(id)
+    }
     popup.style["display"] = "flex";
     opened_popup = popup;
 }
 
 function close_popup() {
+    // Função que esconde a atual popup aberta
+
     if (opened_popup != "") {
         opened_popup.style["display"] = "none";
         opened_popup = "";
@@ -48,13 +51,18 @@ function close_popup() {
 }
 
 function change_popup(id_popup) {
+    // Função que altera entre duas popups
+
     if (opened_popup != "") {
         close_popup();
     }
-    show_popup_by_id(id_popup);
+    show_popup(id=id_popup);
 }
 
 function show_message(message, code) {
+    // Função que configura uma mensagem para ser exibida como popup na tela
+    // Utilizada para exibir respostas de requisições fetch na aplicação
+
     title = document.getElementById("title-message");
     p_message = document.getElementById("popup-message");
     alert_message = document.getElementById("alert-message");
@@ -69,6 +77,9 @@ function show_message(message, code) {
     change_popup("message-pop-up");
 }
 function update_options() {
+    // Função para atualizar as opções de Income e Teller de um usuário.
+    // Utilizada após adicionar um novo Income ou Teller.
+
     let dictionary = {
         to_options : "to_select",
         from_options : "from_select",
@@ -84,12 +95,16 @@ function update_options() {
                 let id = dictionary[key];
                 let select = document.getElementById(id);
                 let size = select.children.length;
+                // Remove as opções alteriores
                 for (let i = 1, c = 1; i < size; i++) {
                     select.removeChild(select.children[c]);
                 }
 
+                // Adiciona as novas obtidas.
                 for (var value of array_elements) {
                     let element = document.createElement("option");
+
+                    // Capitalizar o nome da opção
                     value = value.charAt(0).toUpperCase() + value.toLowerCase().slice(1);
                     element.value = value;
                     element.textContent = value;
@@ -101,16 +116,18 @@ function update_options() {
 }
 
 function transfer(button) {
+    // Função para redirecionar de página
     window.location.assign(button.attributes.href.value);
 }
 
 window.addEventListener("load", function() {
-    // Events listener for the elements in the layout_page
+    // Momento de adicionar os Listeners da aplicação
 
+    // Todos os forms que possuem essa classe enviam as informações
+    // de uma forma assíncrona. O link é o próprio action do form
     forms = document.getElementsByClassName("onformsubmit");
     for (let form of forms) {
         let url_form = form.action;
-        console.log(form, url_form);
         form.onsubmit = async function(event) {
             event.preventDefault();
             let responseAdd = fetch(url_form, {
@@ -124,6 +141,7 @@ window.addEventListener("load", function() {
         }
     }
 
+    // Tecla para fechar popups
     window.addEventListener("keyup", function(event) {
         if (event.key === "Escape") {
             close_popup();
@@ -131,11 +149,10 @@ window.addEventListener("load", function() {
     });
 
     for (let dropbox of document.getElementsByClassName("dropbox")) {
-        dropbox.addEventListener("mouseenter", dropbox_js);
-        dropbox.addEventListener("mouseleave", dropbox_js);
+        dropbox.addEventListener("mouseover", dropbox_js);
+        dropbox.addEventListener("mouseout", dropbox_js);
     }
     for (let mob_dropbox of document.getElementsByClassName("mobile-dropbox")) {
-        mob_dropbox.addEventListener("click", dropbox_js);
         mob_dropbox.addEventListener("click", dropbox_js);
     }
 });

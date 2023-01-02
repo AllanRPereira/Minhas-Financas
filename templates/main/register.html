@@ -6,17 +6,11 @@ Registro
 
 {% block form %}
     <h2 class="blue text_center mb">Preencha para registrar</h2>
-    <form id="form_register" action="/register" method="POST">
+    <form class="form_style" action="/register" method="POST">
         <input type="text" name="email" placeholder="Digite seu e-mail" autocomplete="off">
         <input type="password" name="password" placeholder="Digite sua senha">
         <input type="password" name="confirmation" placeholder="Confirme sua senha">
-        <button type="submit" onsubmit="return sendFormer();">Criar conta</button>
+        <button type="submit">Criar conta</button>
     </form>
-    <script>
-        function sendFormer() {
-            console.log("Entrei");
-            return false;
-        }
-    </script>
 
 {% endblock %}

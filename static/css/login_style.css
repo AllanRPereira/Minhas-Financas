@@ -98,6 +98,11 @@ button:hover {
     gap: 5px;
 }
 
+.form_style {
+    display: flex;
+    flex-direction: column;
+}
+
 #div_welcome {
     width: 50%;
 }
@@ -124,11 +129,6 @@ button:hover {
     color:white;
     font-family: roboto;
     font-size:1em;
-}
-
-#form_login {
-    display: flex;
-    flex-direction: column;
 }
 
 #recovery_password {

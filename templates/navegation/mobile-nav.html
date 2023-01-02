@@ -3,10 +3,14 @@
     <div id="dropbox-mobile" class="col">
         <button onclick="show(this);" id="btn-dropbox" for="mobile-nav"><i class="fa-solid fa-bars"></i></button>
         <nav id="mobile-nav" class="show">
-            <a class="drop-element" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+            <div class="mobile-dropbox">
+                <a class="header drop-element font-1"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+                <a class="drop-element" style="display:none;font-size:0.9em;" href="{{ url_for('index') }}">Página Inicial</a>
+                <a class="drop-element" style="display:none;font-size:0.9em;" href="{{ url_for('logout') }}">Sair</a>
+            </div>
             <div class="mobile-dropbox">
                 <a class="header drop-element font-1"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
-                <a class="drop-element" style="display:none;font-size:0.9em;" value="trans" onclick="show_popup(this)">Adicionar transação</a>
+                <a class="drop-element" style="display:none;font-size:0.9em;" value="trans" onclick="show_popup(element=this)">Adicionar transação</a>
                 <a class="drop-element" style="display:none;font-size:0.9em;" href="{{ url_for('transactions') }}">Ver transações</a>
             </div>
 

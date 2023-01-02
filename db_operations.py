@@ -14,9 +14,9 @@ Códigos utilizados em funções que necessitam de type_pay
 """
 
 
-def insert_data_transaction(db, dict_data):
+def add_transacion(db, dict_data):
     """
-    Insero os dados necessários para criação de um banco de dados, retornando o id
+    Insero os dados necessários para criação de uma transação no BD retornando o id
     da transação criada.
 
     db -> Conexão com o banco de dados
@@ -72,6 +72,29 @@ def insert_data_transaction(db, dict_data):
             VALUES (?,?,?,?,?,?,?)""", insert_content).lastrowid
     
     return id_trans
+
+def add_user(db, email, hash):
+    try:
+        query = "INSERT INTO users (email, password) VALUES (?, ?)"
+        id_user = db.execute(query, (email, hash)).lastrowid
+        names = ("Carteira", "Cartão de Crédito", "Investimentos", "Dívidas")
+        for i in range(4):
+            add_payment(db, names[i], 0, i, id_user=id_user)
+    except Exception as error:
+        return error_handler(str(error))
+    
+    return True
+
+def add_token(db, type_token, id_user=-1):
+    # id_user = -1 é um valor genêrico para a query ter a mesma estrutura em confirmation e recover
+
+    query = "INSERT INTO tokens (id_user, type) VALUES (?, ?)"
+    return db.execute(query, (id_user, type_token)).lastrowid
+
+def delete_token(db, id_token):
+    query = "DELETE FROM tokens WHERE id=?"
+    db.execute(query, (id_token, ))
+    return True
 
 def get_data_payment(db, type_pay):
     """
@@ -315,7 +338,7 @@ def add_teller(db, name, category):
 
     return "Destino adicionado com sucesso", 200
     
-def add_payment(db, name, balance, type_pay):
+def add_payment(db, name, balance, type_pay, id_user=""):
     """
     Adiciona uma nova forma de pagamento (payment_content)
     associando-a à um usuário.
@@ -331,7 +354,9 @@ def add_payment(db, name, balance, type_pay):
     VALUES (?, ?, ?, ?)
     """
 
-    db.execute(query, (session["id_user"], type_pay, name, balance))
+    if id_user == "": id_user = session["id_user"]
+
+    db.execute(query, (id_user, type_pay, name, balance))
 
     return ("Adicionado com sucesso! Recarregue a página", 200)
 
@@ -458,6 +483,95 @@ def get_payments_balance(db):
 
     return payment_methods
 
-def get_user_pass_by_email(db, email):
-    query = "SELECT id, password FROM users WHERE email=? LIMIT 1"
-    return db.execute(query, (email, ))
+def get_transactions(db, filter=""):
+    """
+    Obtém todas as transações do usuário. Pode ter um filtro
+    que determina quais o meios de pagamento que devem ser mostrados
+
+    db -> Conexão com banco de dados
+    filter -> Query SQL que filtra os dados
+
+    Retorna uma lista de dicionários com os dados de cada transação
+    """
+
+    query = f"""
+    SELECT 
+    tr.name, tr.value, tr.timestamp, 
+    CASE 
+        WHEN yi.id_income != -1 THEN (SELECT inc.name FROM incomes AS inc WHERE inc.id=yi.id_income)
+        WHEN yi.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=yi.id_payment)
+    END,
+    CASE
+        WHEN pay.id_teller != -1 THEN (SELECT te.name FROM teller AS te WHERE te.id=pay.id_teller)
+        WHEN pay.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=pay.id_payment)
+    END
+    FROM transactions AS tr
+    INNER JOIN yield AS yi ON yi.id=tr.id_from
+    INNER JOIN payer AS pay ON pay.id=tr.id_to
+    WHERE tr.id_user=? {filter}
+    ORDER BY tr.timestamp;
+    """
+    data = {
+        "headers": ("Nome", "Valor", "Data", "Origem", "Destino")
+    }
+    query_result = db.execute(query, (session["id_user"], )).fetchall()
+    if query_result == [None, ]:
+        data["rows"] = ("-", "-", "-", "-", "-")
+    else:
+        data["rows"] = []
+        for row in query_result:
+            element = {
+                "name" : row[0],
+                "value" : row[1],
+                "date" : datetime.fromtimestamp(row[2]),
+                "origin" : row[3],
+                "destination" : row[4]
+            }
+            data["rows"].append(element)
+    return data
+
+def get_user_pass_by_email(db, email, password=True):
+    """
+    Obtém os dados de um usuário da tabela 'users'.
+    Pode tanto obter o id e o password ou só o id
+
+    db -> Conexão com banco de dados
+    email -> Email do usuário
+    password -> Booleano que determina se quer ou não a senha do usuário
+
+    Retorna os dados requisitados
+    """
+
+    if password:
+        query = "SELECT id, password FROM users WHERE email=? LIMIT 1"
+    else:
+        query = "SELECT id FROM users WHERE email=? LIMIT 1"
+    return db.execute(query, (email, )).fetchall()
+
+def set_user_information(db, id_user, password=False, email=False):
+    """
+    Altera no banco de dados as informações do usuário.
+    Tem-se os booleanos password e email que determinam qual informação será pedida.
+
+    id_user -> Id do usuário na tabela
+    password -> Booleano para obter a senha
+    email -> Booleano para obter o email
+
+    Retorna os dados requisitados
+    """
+
+    query = "UPDATE users SET "
+    bind = tuple()
+    if password != False:
+        query += "password=? "
+        bind += (password, )
+
+    if email != False:
+        query += "email=? "
+        bind += (email, )
+    
+    query += "WHERE id=?"
+    bind += id_user
+    
+    db.execute(query, bind)
+    return True

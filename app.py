@@ -21,6 +21,9 @@ app.jinja_env.filters["date_stamp"] = date_stamp
 
 
 # Configure e-mail
+if os.environ.get("EMAIL_PASS") == None:
+    raise Exception("Senha do acesso ao email não foi definida!")
+
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 465
 app.config["MAIL_USERNAME"] = "devmail.5237@gmail.com"
@@ -31,22 +34,17 @@ app.config["MAIL_DEFAULT_SENDER"] = "devmail.5237@gmail.com"
 
 mail = Mail(app)
 
-# Ensure responses aren't cached
-"""
-@app.after_request
-def after_request(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Expires"] = 0
-    response.headers["Pragma"] = "no-cache"
-    return response
-"""
-
+# Configurações da sessão
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-TOKEN_KEY = os.environ.get("TOKEN_KEY")
+# Configuração da chave de codificação dos tokens
+if os.environ.get("TOKEN_KEY") == None:
+    raise Exception("Chave de codificação dos tokens não foi definida!!")
+else:
+    TOKEN_KEY = os.environ.get("TOKEN_KEY")
 
 WALLET = 0
 CREDIT_CARD = 1
@@ -71,16 +69,25 @@ def close_db(exception):
 @app.route("/", methods=["GET"])
 @login_required
 def index():
+    """
+    Homepage da aplicação, onde há os saldos e as estatísticas
+    """
+
     db = get_db()
     payments_balance = get_payments_balance(db)
     graphs = get_statics(db)
-    options = get_options()
+    options = get_options() # Utilizado para preencher os selects do campos de adicionar transações
 
     return render_template("main/index.html",payments=payments_balance, graphs=graphs, **options)
 
 @app.route("/get_options", methods=["GET"])
 @login_required
 def get_options():
+    """
+    Rota utilizada pelo layout.js para atualizar dinamicamente os Incomes e os
+    Tellers disponíveis no momento de adicionar uma transação.
+    """
+
     db = get_db()
 
     payment_options = get_payment_options(db)
@@ -109,10 +116,10 @@ def login():
         return render_template("main/login.html")
     
     if request.method == "POST":
-        if not check_email(request.form.get("email")):
+        if not check_email(request.form.get("email", "")):
             return error_handler("Email inválido")
         
-        if request.form.get("password") == "":
+        if request.form.get("password", "") == "":
             return error_handler("Senha não pode ser nula")
 
         db = get_db()
@@ -130,27 +137,30 @@ def logout():
     session.clear()
     return redirect("/")
 
-# Registro - Token Type -> 0
-# Recuperação de senha - Token Type -> 1
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """
+    Página de registro da aplicação
+    Importante:
+        Token Type do registro é o código 0
+    """
+
     if request.method == "GET":
         return render_template("main/register.html")
     if request.method == "POST":
-        if not check_email(request.form.get("email")):
+        if not check_email(request.form.get("email", "")):
             return error_handler("Email é inválido")
 
-        if request.form.get("password") == "":
+        if request.form.get("password", "") == "":
             return error_handler("Senha não pode ser nula")
 
-        if request.form.get("password") != request.form.get("confirmation"):
+        if request.form.get("password") != request.form.get("confirmation", ""):
             return error_handler("Senhas não conferem")
         
         db = get_db()
         hash = generate_password_hash(request.form.get("password"))
         try:
-            token_id = db.execute("INSERT INTO tokens (type) VALUES (?)", (0, )).lastrowid
+            token_id = add_token(db, 0)
         except Exception as error:
             return error_handler(str(error))
 
@@ -158,8 +168,8 @@ def register():
             "id": token_id,
             "type": 0,
             "email": request.form.get("email").lower(),
-            "hash": str(hash),
-            "timestamp": datetime.now().timestamp()
+            "hash": hash,
+            "timestamp": datetime.now().timestamp() # Checar tempo de vida do token
         }
 
         register_token = jwt.encode(payload, TOKEN_KEY, algorithm="HS256")
@@ -172,11 +182,15 @@ def register():
 
 @app.route("/register/confirmation", methods=["GET"])
 def confirmation():
-    token = request.args.get("token")
+    """
+    Rota que confirma a o cadastro por meio do link enviado por e-mail
+    """
+
+    token = request.args.get("token", "")
     if token == "":
         return error_handler("Link é inválido")
     
-    db = get_db().cursor()
+    db = get_db()
 
     try:
         token_data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256",])
@@ -187,62 +201,68 @@ def confirmation():
     if not status:
         return error_handler(content)
     
-    try:
-        id_user = db.execute("INSERT INTO users (email, password) VALUES (?, ?)", (token_data["email"], token_data["hash"])).lastrowid
-        names = ("Carteira", "Cartão de Crédito", "Investimentos", "Dívidas")
-        for i in range(4): # Four payment methods
-            db.execute("INSERT INTO payment_content (id_user, type, name) VALUES (?,?,?)",
-                        (id_user, i, names[i]))
-    except Exception as error:
-        return error_handler(str(error))
-    
+    db = get_db()
+    add_user(db, token_data["email"], token_data["hash"])
+    delete_token(db, token_data["id"])
+
     return success_handler("Conta criada com sucesso!")
 
 @app.route("/recovery", methods=["GET", "POST"])
 def recovery():
-    db = get_db()
+    """
+    Rota para a recuperação de senha
+    Importante:
+        Token type para recovery é 1
+    """
 
     if request.method == "GET":
-        if request.args.get("token") == None:
+        if request.args.get("token", "") == "":
             return render_template("main/recovery.html", recovery=True)
         else:
             return render_template("main/recovery.html", recovery=False, token=request.args.get("token"))
 
     if request.method == "POST":
-        email = request.form.get("email").lower()
+        email = request.form.get("email", "").lower()
         if not check_email(email):
             return error_handler("Email inválido!")
         
-        query = "SELECT id FROM users WHERE email=?"
-        result = db.execute(query, (email, )).fetchone()
-        if result != None and result != []:
-            id_user = result[0]
-            id_token = db.execute("INSERT INTO tokens (id_user, type) VALUES (?, ?)", (id_user, 1)).lastrowid
-            payload = {
-                "id" : id_token,
-                "id_user" : id_user,
-                "type" : 1,
-                "timestamp": round(datetime.now().timestamp(), 2)
-            }
-            recover_token = jwt.encode(payload, TOKEN_KEY, algorithm="HS256")
-            content = render_template("mail/mail_recovery.html", token=recover_token)
-            status, response = send_email(mail, "Minhas Finanças: Recuperação de senha", content, email)
-            if not status:
-                return error_handler(response)
+        db = get_db()
+        id_user = get_user_pass_by_email(db, email, password=False)
+        if id_user == []:
+            return error_handler("Usuário não encontrado!")
+
+        id_user = id_user[0][0]
+        id_token = add_token(db, 1, id_user=id_user)
+        payload = {
+            "id" : id_token,
+            "id_user" : id_user,
+            "type" : 1,
+            "timestamp": datetime.now().timestamp()
+        }
+        recover_token = jwt.encode(payload, TOKEN_KEY, algorithm="HS256")
+        content = render_template("mail/mail_recovery.html", token=recover_token)
+        status, response = send_email(mail, "Minhas Finanças: Recuperação de senha", content, email)
+        if not status:
+            return error_handler(response)
 
         return success_handler("Email enviado com sucesso!")
 
 @app.route("/recovery/set", methods=["POST"])
 def recovery_set():
-    password = request.form.get("password")
-    confirmation = request.form.get("confirmation")
+    """
+    Rota que efetivamente faz a mudança da senha no banco de dados
+    verificando se os dados fornecidos são válidos.
+    """
+
+    password = request.form.get("password", "")
+    confirmation = request.form.get("confirmation", "")
     token = request.form.get("token")
     try:
         token_data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
     except Exception as error:
         return error_handler("Token não é válido!")
 
-    if password == "" or password == None:
+    if password == "":
         return error_handler("Campo de senha deve ser preenchido corretamente")
     if password != confirmation:
         return error_handler("Campos de senha não são iguais!")
@@ -252,57 +272,32 @@ def recovery_set():
     if not status:
         return error_handler(content)
     hash = generate_password_hash(password)
-    query = "UPDATE users SET password=? WHERE id=?"
-    db.execute(query, (hash, token_data["id_user"]))
-
-    return success_handler("Senha alterada com sucesso!")
+    result = set_user_information(db, token_data["id_user"], password=hash)
+    if not result:
+        return success_handler("Senha alterada com sucesso!")
+    else:
+        return error_handler("Há falta de dados para a redefinição")
 
 @app.route("/transactions", methods=["GET"])
 @login_required
-def transactions(filter=""):
-    db = get_db()
-    query = f"""
-    SELECT 
-    tr.name, tr.value, tr.timestamp, 
-    CASE 
-        WHEN yi.id_income != -1 THEN (SELECT inc.name FROM incomes AS inc WHERE inc.id=yi.id_income)
-        WHEN yi.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=yi.id_payment)
-    END,
-    CASE
-        WHEN pay.id_teller != -1 THEN (SELECT te.name FROM teller AS te WHERE te.id=pay.id_teller)
-        WHEN pay.id_payment != -1 THEN (SELECT payment.name FROM payment_content AS payment WHERE payment.id=pay.id_payment)
-    END
-    FROM transactions AS tr
-    INNER JOIN yield AS yi ON yi.id=tr.id_from
-    INNER JOIN payer AS pay ON pay.id=tr.id_to
-    WHERE tr.id_user=? {filter}
-    ORDER BY tr.timestamp;
-    """
-    data = {
-        "headers": ("Nome", "Valor", "Data", "Origem", "Destino")
-    }
-    query_result = db.execute(query, (session["id_user"], )).fetchall()
-    if query_result == [None, ]:
-        data["rows"] = ("-", "-", "-", "-", "-")
-    else:
-        data["rows"] = []
-        for row in query_result:
-            t = datetime.fromtimestamp(row[2])
-            element = {
-                "name" : row[0],
-                "value" : row[1],
-                "date" : datetime.fromtimestamp(row[2]),
-                "origin" : row[3],
-                "destination" : row[4]
-            }
-            data["rows"].append(element)
+def transactions():
+    # Obtém todas as transações de um usuário
 
+    db = get_db()
+    data = get_transactions(db)
     return render_template("main/transactions.html", data=data)
 
 
 @app.route("/transactions/<string:type_pay>/<int:id>", methods=["GET"])
 @login_required
 def filter_transactions(type_pay, id):
+    """
+    Obtém as transações por meio de um filtro que são:
+        type_pay -> Método de pagamento, Cartão, Investimento ou Dívida
+        id -> Índice do meio de pagamento dentro os possíveis de um usuário
+        Obs.: Id não é o na tabela, é relativo ao usuário.
+    """
+
     dict_operator = {
         "creditcard" : CREDIT_CARD,
         "investment" : INVESTMENTS,
@@ -313,17 +308,20 @@ def filter_transactions(type_pay, id):
         ids = get_ids_payment_type(db, dict_operator[type_pay])
         if id >= len(ids):
             return error_handler("Opção Inválida!")
-        id_pay = ids[id][0]
+        id_pay = ids[id]
         filter_query = f"""
         AND ( (pay.id_payment != -1 OR yi.id_payment != -1) AND (pay.id_payment={id_pay} OR yi.id_payment={id_pay}) )
         """
-        return transactions(filter=filter_query)
+        data = get_transactions(db, filter=filter_query)
+        return render_template("main/transactions.html", data=data)
     
     return error_handler("URL inválida!")
 
 @app.route("/creditcard", methods=["GET"])
 @login_required
 def creditcard():
+    #Rota para obter e exibir os cartões de crédito
+
     db = get_db()
     creditcard = get_data_payment(db, CREDIT_CARD)
     options = get_options()
@@ -332,9 +330,11 @@ def creditcard():
 @app.route("/add/creditcard", methods=["POST"])
 @login_required
 def add_credit_card():
-    name = request.form.get("name")
-    due_date = request.form.get("due_date")
-    initial_bill = request.form.get("initial_bill").upper().replace("R$", "").replace(",", ".").replace(" ", "")
+    # Rota utilizado pelo layout.js para adicionar um novo cartão
+
+    name = request.form.get("name", "")
+    due_date = request.form.get("due_date", "")
+    initial_bill = format_number(request.form.get("initial_bill", ""))
     status, content = check_name(name)
     if not status:
         return content
@@ -355,6 +355,8 @@ def add_credit_card():
 @app.route("/debts", methods=["GET"])
 @login_required
 def debts():
+    # Rota utilizada para visualizar as dívidas de um usuário
+
     db = get_db()
     debts = get_data_payment(db, DEBTS)
     options = get_options()
@@ -363,15 +365,15 @@ def debts():
 @app.route("/add/debt", methods=["POST"])
 @login_required
 def add_debt():
+    # Rota utilizado pelo layout.js para adicionar uma nova dívida
+
     name = request.form.get("name")
     date_debt = request.form.get("debt_date")
-    current_amount = request.form.get("debt_value").upper().replace("R$", "").replace(",", ".").replace(" ", "")
+    current_amount = format_number(request.form.get("debt_value"))
     status, content = check_name(name)
     if not status:
         return content
 
-    if len(name) > 25:
-        return ("Nome deve ter menos de 25 letras", 400)
     try:
         current_amount = float(current_amount)
     except ValueError:
@@ -390,6 +392,8 @@ def add_debt():
 @app.route("/investiments", methods=["GET"])
 @login_required
 def investiments():
+    # Rota utilizada para exibir os investimentos de um usuário
+
     db = get_db()
     investments = get_data_payment(db, INVESTMENTS)
     options = get_options()
@@ -398,9 +402,11 @@ def investiments():
 @app.route("/add/investiment", methods=["POST"])
 @login_required
 def add_investiment():
+    # Rota utilizada pelo layout.js para adicionar um novo investimento para um usuário
+
     name = request.form.get("name")
     rendiment = request.form.get("rendiment").replace("%", "").replace(",", ".")
-    current_amount = request.form.get("current_amount").upper().replace("R$", "").replace(",", ".")
+    current_amount = format_number(request.form.get("current_amount"))
     status, content = check_name(name)
     if not status:
         return content
@@ -417,11 +423,13 @@ def add_investiment():
 @app.route("/add/transaction", methods=["POST"])
 @login_required
 def add_transaction():
+    # Rota para adicionar uma nova transação
+
     status, content = check_name(request.form.get("name"))
     if not status:
         return content
 
-    if request.form.get("value") == "":
+    if request.form.get("value", "") == "":
         return ("O valor não pode estar vazio", 400)
     try:
         value = request.form.get("value").replace(",", ".")
@@ -431,14 +439,14 @@ def add_transaction():
     except Exception as error:
         return (f"Um erro aconteceu {str(error)}", 400)
 
-    if request.form.get("datetime") == "":
+    if request.form.get("datetime", "") == "":
         return ("Uma data deve ser escolhida", 400)
     
-    if len(request.form.get("description")) > 100:
+    if len(request.form.get("description", "")) > 100:
         return ("Descrição não pode ter mais de 100 caracteres", 400)
 
     db = get_db()
-    check = check_to_from(db, request.form.get("to"), request.form.get("from"), session["id_user"])
+    check = check_to_from(db, request.form.get("to", ""), request.form.get("from", ""), session["id_user"])
     if check == None:
         return ("Destino e/ou origem das transações são inválidos", 400)
     
@@ -454,69 +462,56 @@ def add_transaction():
         "description" : request.form.get("description")
     }
     
-    id_trans = insert_data_transaction(db, data_insert)
+    id_trans = add_transacion(db, data_insert)
 
     return (f"Transação inserida com sucesso", 200)
-
-def check_name(name):
-    if name == None or name == "":
-        return ("Nome não pode ser nulo", 400)
-    if len(name) > 25:
-        return ("Nome deve ter menos de 25 letras", 400)
-    return (True, "")
 
 @app.route("/add/to", methods=["POST"])
 @login_required
 def add_to():
-    status, content = check_add_to_from()
+    # Rota utilizada para adicionar um novo Teller (Fonte de Gasto)
+
+    name = request.form.get("name", "")
+    category = request.form.get("category", "")
+    new_category = request.form.get("new_category", "")
+    status, content = check_add_to_from(name, category, new_category)
+
     if status == False:
         return content, 400
     else:
         db = get_db()
-        if request.form.get("category") != "":
-            return add_teller(db, request.form.get("name"), request.form.get("category"))
-        else:
-            add_category(db, request.form.get("new_category"))
-            return add_teller(db, request.form.get("name"), request.form.get("new_category"))
+
+        if content == "new_category":
+            add_category(db, new_category)
+        
+        return add_teller(db, name, request.form.get(content))
 
 @app.route("/add/from", methods=["POST"])
 @login_required
 def add_from():
-    status, content = check_add_to_from()
+    # Rota para adicionar um novo Income (Fonte de Renda)
+
+    name = request.form.get("name", "")
+    category = request.form.get("category", "")
+    new_category = request.form.get("new_category", "")
+    status, content = check_add_to_from(name, category, new_category)
+
     if status == False:
         return content, 400
     else:
         db = get_db()
-        if request.form.get("category") != "":
-            return add_income(db, request.form.get("name"), request.form.get("category"))
-        else:
-            add_category(db, request.form.get("new_category"))
-            return add_income(db, request.form.get("name"), request.form.get("new_category"))
 
+        if content == "new_category":
+            add_category(db, new_category)
+        
+        return add_income(db, name, request.form.get(content))
 
-def check_add_to_from():
-    name = request.form.get("name")
-    category = request.form.get("category")
-    new_category = request.form.get("new_category")
-    if name == "" or name == None:
-        return (False, "Nome não pode estar vazio")
-
-    cond_one = category == "" or category == None
-    cond_two = new_category == "" or new_category == None
-    if cond_one and cond_two:
-        return (False, "Categoria deve ser escolhida")
-    
-    if not cond_one:
-        if len(category) > 25:
-            return (False, "Categoria deve ter menos de 25 letras")
-    else:
-        if len(new_category) > 25:
-            return (False, "Nova categoria deve ter menos de 25 letras")
-
-    return (True, "")
 
 @app.route("/message", methods=["GET"])
 def message():
+    # Rota para exibir uma página de mensagem na tela
+    # Utilizada para erros, confirmações e outros
+
     if 'msg' not in session:
         return render_template("main/message_page.html", status="none", type="Sem dados", content="Nenhuma mensagem"), 200
 
@@ -525,6 +520,8 @@ def message():
     return render_template("main/message_page.html", **msg), msg["code"]
 
 def error_handler(error):
+    # Função que atua como manipulador dos erros que podem surgir
+
     payload = {
         "status": "error",
         "type": "Erro",
@@ -535,6 +532,8 @@ def error_handler(error):
     return redirect(url_for("message"))
 
 def success_handler(success):
+    # Função utilizada para exibir mensagens de sucesso na tela 
+
     payload = {
         "status": "success",
         "type": "Sucesso",

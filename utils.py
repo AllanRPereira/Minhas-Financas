@@ -6,7 +6,7 @@ from db_operations import get_main_incomes, get_main_expenses, get_expenses_by_c
 
 def login_required(function):
     """
-    Wrap para bloquear acessos sem o login definido na sessão
+    Wrap para bloquear acessos sem o id_user definido na sessão
 
     function -> Função que será restrita
     """
@@ -43,6 +43,42 @@ def check_email(email):
     if email.find("@") == -1:
         return False
     return True
+
+def check_name(name):
+    """
+    Verifica se o nome de um cartão, investimento ou débito atende os requisitos
+    para ser insertido em sua respectiva tabela.
+
+    name -> Nome do método de pagamento
+    """
+
+    if name == None or name == "":
+        return ("Nome não pode ser nulo", 400)
+    if len(name) > 25:
+        return ("Nome deve ter menos de 25 letras", 400)
+    return (True, "")
+
+def check_add_to_from(name, category, new_category):
+    if name == "":
+        return (False, "Nome não pode estar vazio")
+
+    cond_one = category == ""
+    cond_two = new_category == ""
+    if cond_one and cond_two:
+        return (False, "Categoria deve ser escolhida")
+    
+    if not cond_one:
+        if len(category) > 25:
+            return (False, "Categoria deve ter menos de 25 letras")
+    else:
+        if len(new_category) > 25:
+            return (False, "Nova categoria deve ter menos de 25 letras")
+
+    return (True, "category" if not cond_one else "new_category")
+
+def format_number(string):
+    # Formata o texto obtido pelo campo de valor para um float
+    return string.upper().replace("R$", "").replace(",", ".").replace(" ", "")
 
 def check_to_from(db, element_to, element_from, id):
     """

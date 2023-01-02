@@ -28,11 +28,11 @@ Dívidas
                     <button class="btn btn-primary" href="/transactions/debt/{{ debt['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
                     <button class="btn">Editar</button>
                 </div>
-                <p class="muted">Última mudança:<br>{{ debt["lastest_move"] | date_stamp}}!</p>
+                <p class="muted">Última mudança:<br>{{ debt["lastest_move"] | date_stamp}}</p>
             </div>
         {% endfor %}
     </section>
-    <button class="btn btn-primary" value="debt" onclick="show_popup(this)">Adicionar Dívida</button>
+    <button class="btn btn-primary" value="debt" onclick="show_popup(element=this)">Adicionar Dívida</button>
 </div>
 
 
