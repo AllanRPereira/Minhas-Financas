@@ -7,9 +7,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import jwt
 import os
+from time import time
 from datetime import datetime
-from utils import login_required, brl, send_email, check_email, token_validity, percen, get_graphs, date_stamp, check_to_from
-from db_operations import insert_data_transaction, get_data_payment, get_to_options, get_from_options, get_payment_options, get_categorys, add_category, add_income, add_teller, add_payment, get_ids_payment_type
+from utils import *
+from db_operations import *
 
 app = Flask(__name__)
 
@@ -70,8 +71,9 @@ def close_db(exception):
 @app.route("/", methods=["GET"])
 @login_required
 def index():
-    payments_balance = get_payments_balance()
-    graphs = get_statics()
+    db = get_db()
+    payments_balance = get_payments_balance(db)
+    graphs = get_statics(db)
     options = get_options()
 
     return render_template("main/index.html",payments=payments_balance, graphs=graphs, **options)
@@ -101,72 +103,6 @@ def get_options():
 
     return data
 
-def get_payments_balance():
-    """
-    There is four type payments/account methods
-    0 - Wallet
-    1 - Credit Card
-    2 - Investiment
-    3 - Debt
-    """
-
-    db = get_db()
-    id_user = session["id_user"]
-    query = """
-    SELECT type, SUM(balance) FROM payment_content AS p
-    WHERE p.id_user=?
-    GROUP BY type
-    """
-    user_methods = db.execute(query, (id_user, )).fetchall()
-    payment_methods = get_dict_payments()
-    if user_methods != None and user_methods != []:
-        for type_method, balance in user_methods:
-            payment_methods[type_method]["balance"] = balance
-    
-    query = """
-    SELECT MAX(tr.timestamp) FROM payment_content AS pay
-    INNER JOIN payer AS py ON py.id_payment=pay.id
-    INNER JOIN transactions AS tr ON py.id=tr.id_to
-    WHERE tr.id_user=? AND pay.type=?
-    UNION
-    SELECT MAX(tr.timestamp) FROM payment_content AS pay
-    INNER JOIN yield AS y ON y.id_payment=pay.id
-    INNER JOIN transactions AS tr ON y.id=tr.id_from
-    WHERE tr.id_user=? AND pay.type=?
-    ORDER BY MAX(tr.timestamp) DESC
-    LIMIT 1
-    """
-    for type_method in range(4):
-        lastest_move = db.execute(query, (id_user, type_method, id_user, type_method)).fetchone()
-        if lastest_move != []:
-            if lastest_move[0] != None:
-                payment_methods[type_method]["lastest_move"] = datetime.fromtimestamp(lastest_move[0])
-
-    return payment_methods
-
-def get_dict_payments():
-    titles = ["Carteira", "Cartão de Crédito", "Investimentos", "Dívidas"]
-    payment_methods = []
-    for title in titles:
-        payment = {
-            "title": title,
-            "balance": 0,
-            "lastest_move": 0,
-            "id" : "/"
-        }
-        payment_methods.append(payment)
-    return payment_methods
-
-def get_statics():
-    graphs_dict = get_graphs()
-    db = get_db()
-    id_user = session["id_user"]
-
-    for title, graph in graphs_dict.copy().items():
-        graphs_dict[title]["data"] = graphs_dict[title]["func"](db, id_user)
-    
-    return graphs_dict
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
@@ -180,17 +116,14 @@ def login():
             return error_handler("Senha não pode ser nula")
 
         db = get_db()
-        data = db.execute("SELECT id, password FROM users WHERE email=?", 
-                            (request.form.get("email"), )).fetchone()
-        if data == None or data == []:
-            return error_handler("Usuário ou senha incorretos!")
+        data = get_user_pass_by_email(db, request.form.get("email"))
+        for id, hash in data:
+            if check_password_hash(hash, request.form.get("password")):
+                session["id_user"] = id
+                return redirect("/")
+        else:
+            return error_handler("Usuário/Senha Inválidos")
         
-        password = data[1]
-        if not check_password_hash(password, request.form.get("password")):
-            return error_handler("Usuário ou senha incorretos!")
-        
-        session["id_user"] = data[0]
-        return redirect("/")
 
 @app.route("/logout")
 def logout():
@@ -349,7 +282,6 @@ def transactions(filter=""):
         "headers": ("Nome", "Valor", "Data", "Origem", "Destino")
     }
     query_result = db.execute(query, (session["id_user"], )).fetchall()
-    print(query_result)
     if query_result == [None, ]:
         data["rows"] = ("-", "-", "-", "-", "-")
     else:

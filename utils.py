@@ -2,8 +2,14 @@ from functools import wraps
 from flask import session, redirect
 from flask_mail import Message
 from datetime import datetime
+from db_operations import get_main_incomes, get_main_expenses, get_expenses_by_category
 
 def login_required(function):
+    """
+    Wrap para bloquear acessos sem o login definido na sessão
+
+    function -> Função que será restrita
+    """
 
     @wraps(function)
     def requisition_login(*args, **kwargs):
@@ -14,22 +20,44 @@ def login_required(function):
     return requisition_login
 
 def brl(string):
+    # Filtro para converter em valor monetário brasileiro
+
     return f"R$ {string:.2f}"
 
 def percen(string):
+    # Filtro para porcentagem
+
     return f"{100 * string:.1f}%"
 
 def date_stamp(t):
+    # Converte o objeto datetime em formato de data
+    # Ou afirma que não há esse momento de tempo. Timestamp = 0
+
     if t == 0:
         return "Não há"
     return f"{t.day}/{t.month}/{t.year}"
 
 def check_email(email):
+    # Checa se o email digitado possui a divisão pelo @
+
     if email.find("@") == -1:
         return False
     return True
 
 def check_to_from(db, element_to, element_from, id):
+    """
+    Checa se o destino do gasto e a fonte da renda são
+    meios de pagamento. Nesse caso eles terão seus balanços alterados
+    na função de inserir a transação!
+
+    db -> Conexão com banco de dados
+    element_to -> Nome da fonte de gasto
+    element_from -> Nome da fonte de renda
+    id -> Id do usuário
+
+    Retorna o booleano referente a situação de ambos
+    """
+
     if element_to == "" or element_from == "":
         return None
 
@@ -49,66 +77,52 @@ def check_to_from(db, element_to, element_from, id):
 
     return (from_payment, to_payment)
 
-def get_graphs():
+def get_statics(db):
+    """
+    Função que cria as estatística que serão exibidas na homepage.
+    Utiliza um dicionário base que apresenta um parâmetro 'func' que é 
+    a função em db_operations responsável por prover os dados para a estatística
+
+    db -> Conexão com banco de dados
+    """
+
     graphs = {
         "Principais fontes de gastos": {
             "headers": ("Nome", "Gasto Total", "Porcentagem"),
-            "func" : main_expenses
+            "func" : get_main_expenses
         },
         "Gastos por categoria": {
             "headers": ("Nome", "Gasto Total", "Porcentagem"),
-            "func" : category_expenses
+            "func" : get_expenses_by_category
         },
         "Principais rendimentos": {
             "headers": ("Nome", "Rendimento Total", "Porcentagem"),
-            "func" : main_income
+            "func" : get_main_incomes
         }
     }
 
+    for title, graph in graphs.copy().items():
+        graphs[title]["data"] = transform_graphs_data(graph["func"](db))
+
     return graphs
 
-def main_expenses(db, id):
-    query = """
-    SELECT te.name, SUM(value)
-    FROM transactions AS tr
-    INNER JOIN payer AS p ON tr.id_to=p.id
-    INNER JOIN teller AS te ON p.id_teller=te.id
-    INNER JOIN users ON users.id=tr.id_user
-    WHERE tr.id_user=?
-    GROUP BY te.name
-    ORDER BY SUM(value)
+def transform_graphs_data(db_cursor_result):
     """
-    data_one = base_graph_static(db, query, (id, ))
+    Adiciona os dados obtidos pela query ao banco de dados 
+    ao dicionário que será utilizado pelo render_template 
+    na exibição correta das estatísticas!
 
-    return get_final_data(data_one)
+    db_cursor_result -> Retorno de uma db.execute!
 
-def category_expenses(db, id):
-    query = """
-    SELECT cat.name, SUM(value) FROM transactions AS tr
-    INNER JOIN payer AS py ON py.id=tr.id_to
-    INNER JOIN teller AS te ON te.id=py.id_teller
-    INNER JOIN categorys AS cat ON cat.id=te.id_category
-    WHERE tr.id_user=?
-    GROUP BY cat.name
-    ORDER BY SUM(value) DESC;
     """
-    data_one = base_graph_static(db, query, (id, ))
-    return get_final_data(data_one)
 
-def main_income(db, id):
-    query = """
-    SELECT cat.name, SUM(value) FROM transactions AS tr
-    INNER JOIN yield AS yi ON yi.id=tr.id_from
-    INNER JOIN incomes AS inc ON inc.id=yi.id_income
-    INNER JOIN categorys AS cat ON cat.id=inc.id_category
-    WHERE tr.id_user=?
-    GROUP BY cat.name
-    ORDER BY SUM(value) DESC
-    """
-    data_one = base_graph_static(db, query, (id, ))
-    return get_final_data(data_one)
+    data = []
+    for title, value in db_cursor_result:
+        element = {}
+        element["title"] = title
+        element["value"] = value
+        data.append(element)
 
-def get_final_data(data):
     total = sum([graph["value"] for graph in data])
     if len(data) >= 10:
         size = 10
@@ -119,17 +133,19 @@ def get_final_data(data):
         data[i]["percen"] = data[i]["value"] / total
     return data[:size]
 
-
-def base_graph_static(db, query, bind):
-    data = []
-    for title, value in db.execute(query, bind):
-        element = {}
-        element["title"] = title
-        element["value"] = value
-        data.append(element)
-    return data
-
 def send_email(mail, subject, content, destination):
+    """
+    Função que envia o e-mail para confirmação da conta
+    ou recuperação da conta.
+
+    mail -> Conexão com o servidor de email
+    subject -> Assunto da mensagem
+    content -> Render HTML para o email
+    destination -> Email do usuário
+
+    Retorna uma tupla (status, content('Dados do Erro'))
+    """
+
     msg = Message(subject, recipients=[destination,])
     msg.html = content
     try:
@@ -139,15 +155,18 @@ def send_email(mail, subject, content, destination):
     
     return (True, "")
 
-def get_sql_query_token(token_data):
-
-    if token["type"] == 1: #Password Change
-        query = ("UPDATE users SET hash=? WHERE id_user=?", (token["hash"], token["id_user"]))
-        msg = "Senha alterada com sucesso"
-
-    return (query, msg)
-
 def token_validity(db, token_data):
+    """
+    Checa se um dado token é válido:
+        1. Checa o tempo da criação (Menor que 10 minutos)
+        2. Checa se o token foi cadastrado no banco de dados (Para ser válido)
+    
+    db -> Conexão com banco de dados
+    token_data -> Payload do token em forma de dicionário
+
+    Retorna uma tupla (status, content('Dados do Erro'))
+    """
+
     if datetime.now().timestamp() - token_data["timestamp"] > 360:
         return (False, "Link atingiu o tempo máximo")
     

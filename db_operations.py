@@ -1,28 +1,56 @@
 from flask import session
 from datetime import datetime
 
+"""
+Importante:
+
+Há quatro tipos de payment_content:
+0 - Carteira
+1 - Cartão de Crédito
+2 - Investimento
+3 - Dívida
+
+Códigos utilizados em funções que necessitam de type_pay
+"""
+
+
 def insert_data_transaction(db, dict_data):
+    """
+    Insero os dados necessários para criação de um banco de dados, retornando o id
+    da transação criada.
+
+    db -> Conexão com o banco de dados
+    dict_data -> Dicionário com os dados relevantes (Ver em App.py)
+    """
+
     if dict_data["to_payment"]:
+        # Valor é direcionado para uma fonte que possue um saldo
+
+        # Id do meio de pagamento
         id_to = db.execute("SELECT id FROM payment_content WHERE LOWER(name)=? AND id_user=?", 
                         (dict_data["to"].lower(), session["id_user"])).fetchone()[0]
 
+        # Id do Payer que é o intermediário de ligação
         id_payer = db.execute("INSERT INTO payer (id_payment) VALUES (?)", (id_to, )).lastrowid
 
-        # Add to the payment method
+        # Atualização do saldo no meio de pagamento de destino
         db.execute("UPDATE payment_content SET balance=balance+? WHERE id=?", (dict_data["value"], id_to))
 
     else:
+        # Vai para um Teller que não possue saldo, sendo então apenas um gasto
+
         id_to = db.execute("SELECT id FROM teller WHERE LOWER(name)=? AND id_user=?", 
                             (dict_data["to"], session["id_user"])).fetchone()[0]
         id_payer = db.execute("INSERT INTO payer (id_teller) VALUES (?)", (id_to, )).lastrowid
 
     if dict_data["from_payment"]:
+        # Procedimento análogo ao "to_payment"
+
         id_from = db.execute("SELECT id FROM payment_content WHERE LOWER(name)=? AND id_user=?", 
                     (dict_data["from"].lower(), session["id_user"])).fetchone()[0]
 
         id_yield = db.execute("INSERT INTO yield (id_payment) VALUES (?)", (id_from, )).lastrowid
 
-        # Subtract from the payment method
         db.execute("UPDATE payment_content SET balance=balance-? WHERE id=?", (dict_data["value"], id_from))
 
     else:
@@ -35,21 +63,27 @@ def insert_data_transaction(db, dict_data):
         dict_data["value"], 
         dict_data["timestamp"], 
         dict_data["description"], 
-        id_payer, id_yield, session["id_user"]
+        id_payer, 
+        id_yield, 
+        session["id_user"]
     )
     id_trans = db.execute("""INSERT INTO transactions 
             (name, value, timestamp, description, id_to, id_from, id_user) 
             VALUES (?,?,?,?,?,?,?)""", insert_content).lastrowid
+    
     return id_trans
 
 def get_data_payment(db, type_pay):
     """
-    There is four type payments/account methods
-    0 - Wallet
-    1 - Credit Card
-    2 - Investiment
-    3 - Debt
+    Retorna os dados de uma payment_content, inclusive
+    utilizando a função get_lastest_move para obter o timestamp
+    da última transação com esse método de pagamento
+
+    db -> Conexão com o banco de dados
+    type_pay -> Código do pagamento
+
     """
+    
     query = """
     SELECT id, name, balance FROM payment_content
     WHERE id_user=? AND type=?
@@ -70,9 +104,21 @@ def get_data_payment(db, type_pay):
         }
         data.append(element)
         i += 1
+
     return data
 
 def get_lastest_move(db, id_method):
+    """
+    Obtém o objeto datetime da última transação encontrada
+    para um dado id de pagamento. Tanto o pagamento sendo uma fonte (yield)
+    quanto um destino (payer)
+
+    db -> Instância de conexão do banco de dados
+    id_method -> Id do método no banco de dados
+
+    """
+
+
     query = """
     SELECT MAX(tr.timestamp) FROM payment_content AS pay
     INNER JOIN payer AS py ON py.id_payment=pay.id
@@ -88,52 +134,94 @@ def get_lastest_move(db, id_method):
     """
     result = db.execute(query, (session["id_user"], id_method, session["id_user"], id_method)).fetchone()
     if result == (None, ):
-        return 0
+        return 0 # É avaliado posteriormente como não possuindo valor
     else:
         return datetime.fromtimestamp(result[0])
 
 def get_to_options(db):
+    """
+    Obtém os nomes de todos os objetos de gasto (Teller) de um
+    dado usuário. São utilizados no momento de criar uma transação
+    no dropbox da homepage
+
+    db -> Conexão com o banco de dados
+    """
+
     query = """
     SELECT DISTINCT LOWER(name) FROM teller
     WHERE id_user=?
     """
-    data = db.execute(query, (session["id_user"], ))
-    options = []
-    for row in data:
-        options.append(row[0])
-    return options
+    cursor = db.execute(query, (session["id_user"], ))
+    return run_over_row(cursor)
 
 def get_from_options(db):
+    """
+    Analógo ao get_to_options mas obtendo a informação das 
+    fontes de renda (incomes) de um dado usuário.
+
+    db -> Conexão com o banco de dados
+    """
+
     query = """
     SELECT DISTINCT LOWER(name) FROM incomes
     WHERE id_user=?
     """
-    data = db.execute(query, (session["id_user"], ))
-    options = []
-    for row in data:
-        options.append(row[0])
-    return options
+    cursor = db.execute(query, (session["id_user"], ))
+    return run_over_row(cursor)
 
 def get_payment_options(db):
+    """
+    Obtém as formas de pagamento que um dado usuário possui.
+    Todos os usuários possuem uma carteira no momento da criação da conta
+
+    db -> Conexão com o banco de dados
+    """
+
     query = """
     SELECT LOWER(name) FROM payment_content
     WHERE id_user=?
     """
-    data = db.execute(query, (session["id_user"], ))
+    cursor = db.execute(query, (session["id_user"], ))
+    return run_over_row(cursor)
+
+def run_over_row(db_cursor_result):
+    """
+    Percorre um cursor.object do banco de dados.
+
+    db_cursor_result -> db.cursor.result
+    """
+
     options = []
-    for row in data:
+    for row in db_cursor_result:
         options.append(row[0])
     return options
 
 def get_ids_payment_type(db, type_pay):
+    """
+    Obtém os id's dos meios de pagamento que:
+        1. São do usuário da sessão
+        2. São do tipo definido em type_pay
+    
+    db -> Conexão com o banco de dados
+    type_pay -> Tipo de meio de pagamento 
+    """
+
     query = """
     SELECT id FROM payment_content AS pay
     WHERE pay.id_user=? AND pay.type=?
     """
     result = db.execute(query, (session["id_user"], type_pay)).fetchall()
-    return result
+    ids = [row[0] for row in result]
+    return ids
 
 def get_categorys(db):
+    """
+    Obtém as categorias dos incomes e dos tellers
+    de um dado usuário por meio de duas querys
+
+    db -> Conexão com o banco de dados
+    """
+
     categorys ={
         "income" : [],
         "teller" : []
@@ -161,12 +249,26 @@ def get_categorys(db):
     return categorys
 
 def add_category(db, name):
+    """
+    Adicionar uma nova categoria ao banco de dados.
+
+    db -> Conexão com o banco de dados
+    name -> Nome da categoria
+    """
+
     query = """
     INSERT INTO categorys (name) VALUES (?)
     """
     db.execute(query, (name.lower(), ))
 
 def get_id_category(db, category):
+    """
+    Obtém o id de uma categoria, caso não exista, retorna False
+
+    db -> Conexão com o banco de dados
+    category -> Nome da categoria
+    """
+
     query = "SELECT id FROM categorys WHERE LOWER(name)=?"
     id_category = db.execute(query, (category.lower(), )).fetchone()
     if id_category == None:
@@ -176,6 +278,17 @@ def get_id_category(db, category):
     
 
 def add_income(db, name, category):
+    """
+    Adiciona um novo income no banco de dados. É necessário que
+    a categoria da nova fonte de renda (income) já exista previamente.
+
+    db -> Conexão com o banco de dados
+    name -> Nome do novo Income
+    category -> Nome da categoria do Income
+
+    Retorna uma tupla com o resultado da requisição e o código
+    """
+
     id_category = get_id_category(db, category)
     if id_category == False: return "Não foi possível obter a categoria", 400
 
@@ -185,6 +298,15 @@ def add_income(db, name, category):
     return "Origem adicionada com sucesso", 200
 
 def add_teller(db, name, category):
+    """
+    Análogo à adicionar uma nova fonte de renda, porém
+    agora adicionando uma nova forma de gasto (Teller)
+
+    db -> Conexão com o banco de dados
+    name -> Nome da nova fonte de gasto
+    category -> Nome da categoria do Teller
+    """
+
     id_category = get_id_category(db, category)
     if id_category == False: return "Não foi possível obter a categoria", 400
     
@@ -194,6 +316,16 @@ def add_teller(db, name, category):
     return "Destino adicionado com sucesso", 200
     
 def add_payment(db, name, balance, type_pay):
+    """
+    Adiciona uma nova forma de pagamento (payment_content)
+    associando-a à um usuário.
+    
+    db -> Conexão com o banco de dados
+    name -> Nome do método de pagamento
+    balance -> Saldo inicial do método
+    type_pay -> Tipo de Método de pagamento (Carteira, Cartão, Investimento e Dívida)
+    """
+
     query = """
     INSERT INTO payment_content (id_user, type, name, balance)
     VALUES (?, ?, ?, ?)
@@ -202,3 +334,130 @@ def add_payment(db, name, balance, type_pay):
     db.execute(query, (session["id_user"], type_pay, name, balance))
 
     return ("Adicionado com sucesso! Recarregue a página", 200)
+
+def get_main_incomes(db):
+    """
+    Função que obtém do banco de dados as principais fontes de 
+    renda de um dado usuário.
+
+    db -> Conexão com o banco de dados
+
+    Retorna cursor da resposta do banco de dados
+    """
+
+    query = """
+    SELECT cat.name, SUM(value) FROM transactions AS tr
+    INNER JOIN yield AS yi ON yi.id=tr.id_from
+    INNER JOIN incomes AS inc ON inc.id=yi.id_income
+    INNER JOIN categorys AS cat ON cat.id=inc.id_category
+    WHERE tr.id_user=?
+    GROUP BY cat.name
+    ORDER BY SUM(value) DESC
+    """
+    result = db.execute(query, (session["id_user"], ))
+    return result
+
+def get_expenses_by_category(db):
+    """
+    Função que obtém as principais fontes de gasto de um usuário
+    de forma que são separadas por meio das suas categorias
+
+    db -> Conexão com banco de dados
+
+    Retorna cursor da resposta do banco de dados
+    """
+
+    query = """
+    SELECT cat.name, SUM(value) FROM transactions AS tr
+    INNER JOIN payer AS py ON py.id=tr.id_to
+    INNER JOIN teller AS te ON te.id=py.id_teller
+    INNER JOIN categorys AS cat ON cat.id=te.id_category
+    WHERE tr.id_user=?
+    GROUP BY cat.name
+    ORDER BY SUM(value) DESC;
+    """
+    result = db.execute(query, (session["id_user"], ))
+    return result
+
+def get_main_expenses(db):
+    """
+    Análogo ao get_main_incomes porém obtendo as principais fontes de renda
+    de um dado usuário
+
+    db -> Conexão com banco de dados
+
+    Retorna cursor da resposta do banco de dados
+    """
+
+    query = """
+    SELECT te.name, SUM(value)
+    FROM transactions AS tr
+    INNER JOIN payer AS p ON tr.id_to=p.id
+    INNER JOIN teller AS te ON p.id_teller=te.id
+    INNER JOIN users ON users.id=tr.id_user
+    WHERE tr.id_user=?
+    GROUP BY te.name
+    ORDER BY SUM(value)
+    """
+    result = db.execute(query, (session["id_user"], ))
+    return result
+
+def get_payments_balance(db):
+    """
+    Função que obtém os dados de cada método de pagamento,
+    Nome, Saldo e a última transação tanto de gasto quanto de ganho
+    realizado por um dado método
+
+    db -> Conexão com banco de dados
+
+    """
+    id_user = session["id_user"]
+    query = """
+    SELECT type, SUM(balance) FROM payment_content AS p
+    WHERE p.id_user=?
+    GROUP BY type
+    """
+
+    user_methods = db.execute(query, (id_user, )).fetchall()
+
+    titles = ["Carteira", "Cartão de Crédito", "Investimentos", "Dívidas"]
+    payment_methods = []
+    for title in titles:
+        payment = {
+            "title": title,
+            "balance": 0,
+            "lastest_move": 0,
+            "id" : "/"
+        }
+        payment_methods.append(payment)
+
+    if user_methods != None and user_methods != []:
+        for type_method, balance in user_methods:
+            payment_methods[type_method]["balance"] = balance
+    
+    
+    query = """
+    SELECT MAX(tr.timestamp) FROM payment_content AS pay
+    INNER JOIN payer AS py ON py.id_payment=pay.id
+    INNER JOIN transactions AS tr ON py.id=tr.id_to
+    WHERE tr.id_user=? AND pay.type=?
+    UNION
+    SELECT MAX(tr.timestamp) FROM payment_content AS pay
+    INNER JOIN yield AS y ON y.id_payment=pay.id
+    INNER JOIN transactions AS tr ON y.id=tr.id_from
+    WHERE tr.id_user=? AND pay.type=?
+    ORDER BY MAX(tr.timestamp) DESC
+    LIMIT 1
+    """
+    
+    for type_method in range(4):
+        lastest_move = db.execute(query, (id_user, type_method, id_user, type_method)).fetchone()
+        if lastest_move != []:
+            if lastest_move[0] != None:
+                payment_methods[type_method]["lastest_move"] = datetime.fromtimestamp(lastest_move[0])
+
+    return payment_methods
+
+def get_user_pass_by_email(db, email):
+    query = "SELECT id, password FROM users WHERE email=? LIMIT 1"
+    return db.execute(query, (email, ))

@@ -5,8 +5,19 @@ import string
 import random
 import os
 
+"""
+Parte do software utilizada para gerar conteúdo para o banco de dados.
+    1. Reseta o banco de dados
+    2. Adiciona um usuário
+    3. Cria os payment_content
+    4. Cria as categorias
+    5. Criar os Tellers e os Incomes
+    6. Adicionar as transações
+"""
+
+
 def random_generator(size=6, chars=string.ascii_uppercase + string.digits):
- return ''.join(random.choice(chars) for _ in range(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 # Reset database
