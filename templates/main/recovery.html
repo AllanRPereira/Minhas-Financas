@@ -1,0 +1,27 @@
+{% extends "./layouts/layout_index.html" %}
+
+{% block title %}
+Recuperação de senha
+{% endblock %}
+
+{% block form %}
+    <h2 class="blue text_center mb">Recuperar senha</h2>
+    {% if recovery %}
+
+    <form class="form_style" action="/recovery" method="POST">
+            <input type="text" name="email" placeholder="Digite seu e-mail" autocomplete="off">
+            <div class="actions">
+                <button type="submit">Recuperar senha</button>
+            </div>
+    {% else %}
+    <form class="form_style" action="/recovery/set" method="POST">
+            <input type="password" name="password" placeholder="Digite sua nova senha" autocomplete="off">
+            <input type="password" name="confirmation" placeholder="Confirme sua senha" autocomplete="off">
+            <input type="hidden" name="token" value="{{ token }}">
+            <div class="actions">
+                <button type="submit">Redefinir senha</button>
+            </div>
+    {% endif %}
+    </form>
+
+{% endblock %}

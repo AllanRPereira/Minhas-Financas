@@ -1,0 +1,64 @@
+{% extends "./layouts/layout_base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/index.css">
+<link rel="stylesheet" href="/static/css/base_blocks.css">
+{% endblock %}
+
+{% block title %}
+Página Inicial
+{% endblock %}
+
+{% block main %}
+    <div class="col align-center">
+        <h1 class="painel">Painel Principal</h1>
+        <h2>Saldos</h2>
+        <section id="balances" class="row w-100 justify-center wrap">
+            {% for payment in payments %}
+                <div class="box text-center">
+                    <p class="box-title">{{ payment["title"] }}</p>
+                    {% if payment["balance"] > 0 %}
+                        <p class="box-balance">Saldo: <span style="color:green"><wbr>{{ payment["balance"] | brl}}</span></p>
+                    {% elif payment["balance"] == 0 %}
+                    <p class="box-balance">Saldo: <span style="color:black"><wbr>{{ payment["balance"] | brl}}</span></p>
+                    {% else %}
+                        <p class="box-balance">Saldo: <span style="color:red"><wbr>{{ payment["balance"] | brl }}</span></p>
+                    {% endif %}
+                    {% if payment["lastest_move"] != 0 %}
+                        <p class="muted">Última movimentação:<wbr>&nbsp;{{ payment["lastest_move"] | date_stamp }}</p>
+                    {% else %}
+                        <p class="muted">Última movimentação:<wbr>&nbsp;Inexistente</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </section>
+
+        <h2 class="mt">Estatísticas</h2>
+        <section class="row w-100 justify-center wrap">
+            {% for title, graph in graphs.items() %}
+                <div class="box-graph">
+                    <p class="bold box-title">{{ title }}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                {% for header in graph["headers"] %}
+                                    <th>{{ header }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in graph["data"] %}
+                                <tr>
+                                    <td>{{ data["title"].capitalize() }}</td>
+                                    <td>{{ data["value"] | brl }}</td>
+                                    <td>{{ data["percen"] | percen }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </section>
+    </div>
+{% endblock %}
+

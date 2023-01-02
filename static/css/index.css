@@ -1,0 +1,50 @@
+h2 {
+    font-size: 1.8em;
+}
+
+.painel {
+    margin: 0;
+    margin-top:2em;
+}
+
+.box-graph {
+    border-radius: 3px;
+    text-align: center;
+    max-width: 75%;
+    width: 400px;
+    min-width: 350px;
+    margin: 0.5em;
+    padding: 1em 0;
+    height: fit-content;
+    border: 0.5px solid #888;
+}
+
+.mt {
+    margin:1em 0;
+}
+
+.center {
+    text-align: center;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align:center;
+    font-size: 1em;
+}
+
+th, td {
+    padding: 0.2em 1em;
+}
+
+tr, td, th {
+    border: 0.5px solid #444;
+}
+
+@media screen and (max-width:500px) {
+    .box-graph {
+        font-size: 0.9em;
+    }
+
+}

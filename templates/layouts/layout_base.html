@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <title>Finanças: {% block title %}{% endblock %}</title>
+        <script src="https://kit.fontawesome.com/a6ee18bd44.js" crossorigin="anonymous"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/base_style.css">
+        <link rel="stylesheet" href="/static/css/layout_style.css">
+        {% block head %}{% endblock %}
+        <script src="/static/js/layout_base.js"></script>
+    </head>
+    <body>
+        <div class="container align-center">
+            {% include "./popups/add_trans.html" %}
+            
+            {% include "./popups/add_credit_card.html" %}
+
+            {% include "./popups/add_investiment.html" %}
+
+            {% include "./popups/add_debt.html" %}
+
+            {% include "./popups/category.html" %}
+            
+            {% include "./popups/message.html" %}
+
+            <header id="header-nav" class="col align-center">
+                {% include "./navegation/mobile-nav.html" %}
+
+                {% include "./navegation/nav.html" %}
+
+            </header>
+            <main>
+                {% block main %}
+                {% endblock %}
+            </main>
+            <footer class="col align-center">
+                <p class="muted">Minhas finanças por <a href="#">AllanRPereira</a>. 
+                    Projeto hospedado no <a href="#">Github</a></p>
+            </footer>
+        </div>
+    </body>
+</html>

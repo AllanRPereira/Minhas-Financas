@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <title>Minhas Finanças: {% block title %}{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/login_style.css">
+    </head>
+    <body>
+        <div class="container">
+            <div id="div_welcome">
+                <h1 id="welcome_login" onclick="window.location.assign('/');">Minhas Finanças</h1>
+                <h3 id="label_welcome">Onde sua organização financeira começa...</h3>
+            </div>
+            <div id="div_form">
+                {% block form %}
+                {% endblock %}
+            </div>
+        </div>
+    </body>
+</html>

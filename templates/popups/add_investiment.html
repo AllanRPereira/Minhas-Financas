@@ -1,0 +1,15 @@
+<div class="pop-up" id="invest-pop-up">
+    <div id="form-content">
+        <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
+        <h2>Dados do Investimento</h2>
+        <form autocomplete="off" id="add-investment-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_investiment') }}">
+            <label for="name">Nome do Investimento:</label>
+            <input type="text" name="name" placeholder="Ex.: Picpay">
+            <label for="rendiment">Rendimento Mensal:</label>
+            <input type="text" name="rendiment" placeholder="3,99%">
+            <label for="current_amount">Montante Atual:</label> 
+            <input type="text" name="current_amount" placeholder="R$110,00">
+            <button type="submit">Adicionar investimento</button>
+        </form>
+    </div>
+</div>

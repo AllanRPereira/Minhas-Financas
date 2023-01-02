@@ -1,0 +1,158 @@
+@font-face {
+    font-family: lobstertwo;
+    src: url("/static/fonts/lobstertwo.ttf");
+}
+
+@font-face {
+    font-family: roboto;
+    src: url("/static/fonts/roboto.ttf");
+}
+
+::placeholder {
+    color: black;
+    opacity: 0.4;
+}
+
+* {
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: roboto;
+    background-color: #2e86de;
+}
+
+input, button {
+    line-height: 2.4em;
+    font-size: 1em;
+    margin: 0.5em 0;
+    width: 100%;
+}
+
+input {
+    outline:0;
+    padding: 0 0.5em;
+    border:0;
+    color:#555;
+    transition: all 0.15s;
+    background-color:rgb(38, 235, 229, 0.2);
+    border-bottom: 2px solid #2e86de;
+}
+
+input:focus-visible {
+    outline: 0.5px solid #2e86de;
+}
+
+a {
+    text-decoration: none;
+    color:#2E86DE;
+}
+ 
+button[type="submit"] {
+    border: 0.5px solid #ccc;
+    background-color:#2E86DE;
+    color:white;
+}
+
+button {
+    color: #2E86DE;
+    transition: all .2s;
+    border: 0.5px solid #2e86de;
+    background-color: white;
+}
+
+button:hover {
+    background-color: rgb(46, 134, 222, 0.6);
+    color:white;
+    border-color: #fff;
+}
+
+.text_center {
+    text-align: center;
+}
+
+.mb {
+    margin-bottom: 1em;
+}
+
+.blue {
+    color:#2E86DE;
+    text-shadow: 1px 1px 1px #999;
+}
+
+.container {
+    height:100vh;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4em;
+}
+
+.actions {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.form_style {
+    display: flex;
+    flex-direction: column;
+}
+
+#div_welcome {
+    width: 50%;
+}
+
+#div_form {
+    width: 20em; /* Isto é muito importante */
+    margin-right: 1em;
+    background-color: rgb(255, 255, 255, 1);
+    padding: 1.2em;
+    border-radius: 3px;
+}
+
+#welcome_login {
+    text-align: center;
+    font-size: 4.5em;
+    font-family: lobstertwo;
+    font-weight: 100;
+    text-shadow: 1px 1px 1px #999;
+    color:white;
+}
+
+#label_welcome {
+    text-align: end;
+    color:white;
+    font-family: roboto;
+    font-size:1em;
+}
+
+#recovery_password {
+    font-weight: 600;
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    transition: all 0.1s;
+    width: fit-content;
+    border: 0.5px solid rgb(255, 255, 255, 0);
+}
+
+#recovery_password:hover {
+    color:#105191;
+    border-bottom: 0.5px solid #105191;
+}
+
+@media only screen and (max-width: 800px) and (min-height: 410px) {
+    .container {
+        height:100vh;
+        display: flex;
+        flex-direction: column; /* A única mudança */
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 4em;
+    }
+}

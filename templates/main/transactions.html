@@ -1,0 +1,37 @@
+{% extends "./layouts/layout_base.html" %}
+
+{% block title %}
+Transações
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/index.css">
+<link rel="stylesshet" href="/static/css/transactions.css">
+{% endblock %}
+
+{% block main %}
+    <h1 class="center mt">
+        Suas transações:
+    </h1>
+    <table>
+        <thead>
+            <tr>
+                {% for header in data["headers"] %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data["rows"] %}
+                <tr>
+                    <td>{{row["name"].capitalize() }}</td>
+                    <td>{{row["value"] | brl}}</td>
+                    <td>{{row["date"] | date_stamp }}</td>
+                    <td>{{row["origin"].capitalize() }}</td>
+                    <td>{{row["destination"].capitalize() }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

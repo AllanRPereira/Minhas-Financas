@@ -1,0 +1,15 @@
+<nav id="normal-nav" class="row">
+    <div class="dropbox">
+        <a class="header drop-element" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+        <a class="drop-element" href="{{ url_for('logout') }}" style="display:none;">Sair da conta</a>
+    </div>
+    <div class="dropbox">
+        <a class="header drop-element"><i class="fa-solid fa-right-left"></i>&nbsp Transações</a>
+        <a class="drop-element" style="display:none;" value="trans" onclick="show_popup(element=this)">Adicionar transação</a>
+        <a class="drop-element" style="display:none;" href="{{ url_for('transactions') }}">Ver transações</a>
+    </div>
+    
+    <a class="nav-element" href="{{ url_for('creditcard') }}"><i class="fa-regular fa-credit-card"></i>&nbsp Cartões</a>
+    <a class="nav-element red" href="{{ url_for('debts') }}"><i class="fa-solid fa-building-columns"></i>&nbsp Dívidas</a>
+    <a class="nav-element green" href="{{ url_for('investiments') }}"><i class="fa-solid fa-chart-column"></i>&nbsp Investimentos</a>
+</nav>
