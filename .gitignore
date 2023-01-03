@@ -4,3 +4,4 @@
 /static/paper.txt
 *.db
 reg.py
+test_*

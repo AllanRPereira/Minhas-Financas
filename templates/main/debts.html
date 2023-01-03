@@ -9,6 +9,11 @@ Dívidas
 <link rel="stylesheet" href="/static/css/base_blocks.css">
 {% endblock %}
 
+{% block aboveall %}
+    {% include "./popups/add_debt.html" %}
+    {% include "./popups/set_debt.html" %}
+{% endblock %}
+
 {% block main %}
 <div class="col align-center">
 
@@ -26,7 +31,7 @@ Dívidas
             {% endif %}
                 <div class="row justify-center options">
                     <button class="btn btn-primary" href="/transactions/debt/{{ debt['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
-                    <button class="btn">Editar</button>
+                    <button type="button" value="set-debt" id="{{ debt['id'] }}" onclick="set_value('set-debt', this); show_popup(element=this);" class="btn">Editar</button>
                 </div>
                 <p class="muted">Última mudança:<br>{{ debt["lastest_move"] | date_stamp}}</p>
             </div>

@@ -202,7 +202,13 @@ def confirmation():
         return error_handler(content)
     
     db = get_db()
-    add_user(db, token_data["email"], token_data["hash"])
+    id_user = add_user(db, token_data["email"], token_data["hash"])
+
+    # Adiciona os meios base de pagamento
+    names = ("carteira", "cartão de crédito", "investimentos", "dívidas")
+    for i in range(4):
+        add_payment(db, names[i], 0, i, id_user)
+
     delete_token(db, token_data["id"])
 
     return success_handler("Conta criada com sucesso!")
@@ -327,10 +333,13 @@ def creditcard():
     options = get_options()
     return render_template("main/credit_card.html", cards=creditcard, **options)
 
-@app.route("/add/creditcard", methods=["POST"])
+@app.route("/<string:operation>/creditcard", methods=["POST"])
 @login_required
-def add_credit_card():
+def operator_credit_card(operation):
     # Rota utilizado pelo layout.js para adicionar um novo cartão
+
+    if operation not in ["add", "set"]:
+        return ("Url é inválida", 404)
 
     name = request.form.get("name", "")
     due_date = request.form.get("due_date", "")
@@ -350,7 +359,12 @@ def add_credit_card():
     
     
     db = get_db()
-    return add_payment(db, name, initial_bill, CREDIT_CARD)
+    if operation == "add":
+        add_payment(db, name, initial_bill, CREDIT_CARD)
+    else:
+        return "TODO"
+    return ("Adicionado com sucesso! Recarregue a página", 200)
+
 
 @app.route("/debts", methods=["GET"])
 @login_required
@@ -362,10 +376,12 @@ def debts():
     options = get_options()
     return render_template("main/debts.html", debts=debts, **options)
 
-@app.route("/add/debt", methods=["POST"])
+@app.route("/<string:operation>/debt", methods=["POST"])
 @login_required
-def add_debt():
+def operator_debt(operation):
     # Rota utilizado pelo layout.js para adicionar uma nova dívida
+    if operation not in ("add", "set"):
+        return ("Url é inválida", 404)
 
     name = request.form.get("name")
     date_debt = request.form.get("debt_date")
@@ -386,7 +402,11 @@ def add_debt():
     
     
     db = get_db()
-    return add_payment(db, name, current_amount, DEBTS)
+    if operation == "add":
+        add_payment(db, name, current_amount, DEBTS)
+    else:
+        return "TODO", 200
+    return ("Adicionado com sucesso! Recarregue a página", 200)
 
 
 @app.route("/investiments", methods=["GET"])
@@ -399,10 +419,13 @@ def investiments():
     options = get_options()
     return render_template("main/investiments.html", investments=investments, **options)
 
-@app.route("/add/investiment", methods=["POST"])
+@app.route("/<string:operation>/investiment", methods=["POST"])
 @login_required
-def add_investiment():
+def operator_investiment(operation):
     # Rota utilizada pelo layout.js para adicionar um novo investimento para um usuário
+
+    if operation not in ("add", "set"):
+        return "Url é inválida", 404
 
     name = request.form.get("name")
     rendiment = request.form.get("rendiment").replace("%", "").replace(",", ".")
@@ -418,12 +441,18 @@ def add_investiment():
         return ("Rendimento e quantidade devem ser número", 400)
     
     db = get_db()
-    return add_payment(db, name, current_amount, INVESTMENTS)
+    if operation == "add":
+        add_payment(db, name, current_amount, INVESTMENTS)
+    else:
+        return "TODO", 200
+    return ("Adicionado com sucesso! Recarregue a página", 200)
 
-@app.route("/add/transaction", methods=["POST"])
+@app.route("/<string:operation>/transaction", methods=["POST"])
 @login_required
-def add_transaction():
+def operator_transaction(operation):
     # Rota para adicionar uma nova transação
+    if operation not in ("add", "set"):
+        return "Url é inválida", 404
 
     status, content = check_name(request.form.get("name"))
     if not status:
@@ -462,7 +491,10 @@ def add_transaction():
         "description" : request.form.get("description")
     }
     
-    id_trans = add_transacion(db, data_insert)
+    if operation == "add":
+        id_trans = add_transacion(db, data_insert)
+    else:
+        return "TODO", 200
 
     return (f"Transação inserida com sucesso", 200)
 

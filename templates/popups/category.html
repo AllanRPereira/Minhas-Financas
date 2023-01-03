@@ -1,7 +1,7 @@
 <div class="pop-up" id="to-pop-up">
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
-        <h2>Dados fonte de gasto</h2>
+        <h2 class="text-center">Dados fonte de gasto</h2>
         <form autocomplete="off" id="add-to" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_to') }}">
             <label for="name">Nome do Destino:</label>
             <input type="text" name="name" placeholder="Ex.: Aluguel, Mensalidade">
@@ -39,7 +39,7 @@
 <div class="pop-up" id="from-pop-up">
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
-        <h2>Dados fonte de grana</h2>
+        <h2 class="text-center">Dados fonte de renda</h2>
 
         <form autocomplete="off" id="add-from" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_from') }}">
             <label for="name">Nome da Origem:</label>

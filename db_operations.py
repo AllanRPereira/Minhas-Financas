@@ -13,7 +13,93 @@ Há quatro tipos de payment_content:
 Códigos utilizados em funções que necessitam de type_pay
 """
 
+def add_user(db, email, hash):
+    try:
+        query = "INSERT INTO users (email, password) VALUES (?, ?)"
+        id_user = db.execute(query, (email, hash)).lastrowid
+        return id_user
+    except Exception as error:
+        return error_handler(str(error))
 
+def add_payment(db, name, balance, type_pay, id_user=""):
+    """
+    Adiciona uma nova forma de pagamento (payment_content)
+    associando-a à um usuário.
+    
+    db -> Conexão com o banco de dados
+    name -> Nome do método de pagamento
+    balance -> Saldo inicial do método
+    type_pay -> Tipo de Método de pagamento (Carteira, Cartão, Investimento e Dívida)
+    """
+
+    query = """
+    INSERT INTO payment_content (id_user, type, name, balance)
+    VALUES (?, ?, ?, ?)
+    """
+
+    if id_user == "": id_user = session["id_user"]
+
+    id_payment = db.execute(query, (id_user, type_pay, name, balance)).lastrowid
+
+    return id_payment
+
+def add_category(db, name):
+    """
+    Adicionar uma nova categoria ao banco de dados.
+
+    db -> Conexão com o banco de dados
+    name -> Nome da categoria
+    """
+
+    query = """
+    INSERT INTO categorys (name) VALUES (?)
+    """
+    return db.execute(query, (name.lower(), )).lastrowid
+
+def add_income(db, name, category):
+    """
+    Adiciona um novo income no banco de dados. É necessário que
+    a categoria da nova fonte de renda (income) já exista previamente.
+
+    db -> Conexão com o banco de dados
+    name -> Nome do novo Income
+    category -> Nome da categoria do Income
+
+    Retorna uma tupla com o resultado da requisição e o código
+    """
+
+    id_category = get_id_category(db, category)
+    if id_category == False: return "Não foi possível obter a categoria", 400
+
+    query = "INSERT INTO incomes (name, id_user, id_category) VALUES (?, ?, ?)"
+    db.execute(query, (name.lower(), session["id_user"], id_category))
+
+    return "Origem adicionada com sucesso", 200
+
+def add_teller(db, name, category):
+    """
+    Análogo à adicionar uma nova fonte de renda, porém
+    agora adicionando uma nova forma de gasto (Teller)
+
+    db -> Conexão com o banco de dados
+    name -> Nome da nova fonte de gasto
+    category -> Nome da categoria do Teller
+    """
+
+    id_category = get_id_category(db, category)
+    if id_category == False: return "Não foi possível obter a categoria", 400
+    
+    query = "INSERT INTO teller (name, id_user, id_category) VALUES (?, ?, ?)"
+    db.execute(query, (name.lower(), session["id_user"], id_category))
+
+    return "Destino adicionado com sucesso", 200
+    
+def add_token(db, type_token, id_user=-1):
+    # id_user = -1 é um valor genêrico para a query ter a mesma estrutura em confirmation e recover
+
+    query = "INSERT INTO tokens (id_user, type) VALUES (?, ?)"
+    return db.execute(query, (id_user, type_token)).lastrowid
+ 
 def add_transacion(db, dict_data):
     """
     Insero os dados necessários para criação de uma transação no BD retornando o id
@@ -72,29 +158,6 @@ def add_transacion(db, dict_data):
             VALUES (?,?,?,?,?,?,?)""", insert_content).lastrowid
     
     return id_trans
-
-def add_user(db, email, hash):
-    try:
-        query = "INSERT INTO users (email, password) VALUES (?, ?)"
-        id_user = db.execute(query, (email, hash)).lastrowid
-        names = ("Carteira", "Cartão de Crédito", "Investimentos", "Dívidas")
-        for i in range(4):
-            add_payment(db, names[i], 0, i, id_user=id_user)
-    except Exception as error:
-        return error_handler(str(error))
-    
-    return True
-
-def add_token(db, type_token, id_user=-1):
-    # id_user = -1 é um valor genêrico para a query ter a mesma estrutura em confirmation e recover
-
-    query = "INSERT INTO tokens (id_user, type) VALUES (?, ?)"
-    return db.execute(query, (id_user, type_token)).lastrowid
-
-def delete_token(db, id_token):
-    query = "DELETE FROM tokens WHERE id=?"
-    db.execute(query, (id_token, ))
-    return True
 
 def get_data_payment(db, type_pay):
     """
@@ -271,19 +334,6 @@ def get_categorys(db):
 
     return categorys
 
-def add_category(db, name):
-    """
-    Adicionar uma nova categoria ao banco de dados.
-
-    db -> Conexão com o banco de dados
-    name -> Nome da categoria
-    """
-
-    query = """
-    INSERT INTO categorys (name) VALUES (?)
-    """
-    db.execute(query, (name.lower(), ))
-
 def get_id_category(db, category):
     """
     Obtém o id de uma categoria, caso não exista, retorna False
@@ -299,67 +349,6 @@ def get_id_category(db, category):
     else:
         return id_category[0]
     
-
-def add_income(db, name, category):
-    """
-    Adiciona um novo income no banco de dados. É necessário que
-    a categoria da nova fonte de renda (income) já exista previamente.
-
-    db -> Conexão com o banco de dados
-    name -> Nome do novo Income
-    category -> Nome da categoria do Income
-
-    Retorna uma tupla com o resultado da requisição e o código
-    """
-
-    id_category = get_id_category(db, category)
-    if id_category == False: return "Não foi possível obter a categoria", 400
-
-    query = "INSERT INTO incomes (name, id_user, id_category) VALUES (?, ?, ?)"
-    db.execute(query, (name.lower(), session["id_user"], id_category))
-
-    return "Origem adicionada com sucesso", 200
-
-def add_teller(db, name, category):
-    """
-    Análogo à adicionar uma nova fonte de renda, porém
-    agora adicionando uma nova forma de gasto (Teller)
-
-    db -> Conexão com o banco de dados
-    name -> Nome da nova fonte de gasto
-    category -> Nome da categoria do Teller
-    """
-
-    id_category = get_id_category(db, category)
-    if id_category == False: return "Não foi possível obter a categoria", 400
-    
-    query = "INSERT INTO teller (name, id_user, id_category) VALUES (?, ?, ?)"
-    db.execute(query, (name.lower(), session["id_user"], id_category))
-
-    return "Destino adicionado com sucesso", 200
-    
-def add_payment(db, name, balance, type_pay, id_user=""):
-    """
-    Adiciona uma nova forma de pagamento (payment_content)
-    associando-a à um usuário.
-    
-    db -> Conexão com o banco de dados
-    name -> Nome do método de pagamento
-    balance -> Saldo inicial do método
-    type_pay -> Tipo de Método de pagamento (Carteira, Cartão, Investimento e Dívida)
-    """
-
-    query = """
-    INSERT INTO payment_content (id_user, type, name, balance)
-    VALUES (?, ?, ?, ?)
-    """
-
-    if id_user == "": id_user = session["id_user"]
-
-    db.execute(query, (id_user, type_pay, name, balance))
-
-    return ("Adicionado com sucesso! Recarregue a página", 200)
-
 def get_main_incomes(db):
     """
     Função que obtém do banco de dados as principais fontes de 
@@ -574,4 +563,9 @@ def set_user_information(db, id_user, password=False, email=False):
     bind += id_user
     
     db.execute(query, bind)
+    return True
+
+def delete_token(db, id_token):
+    query = "DELETE FROM tokens WHERE id=?"
+    db.execute(query, (id_token, ))
     return True

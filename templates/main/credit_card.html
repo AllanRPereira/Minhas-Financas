@@ -8,10 +8,13 @@ Cartões de Crédito
 <link rel="stylesheet" href="/static/css/base_blocks.css">
 {% endblock %}
 
+{% block aboveall %}
+    {% include "./popups/add_credit_card.html" %}
+    {% include "./popups/set_credit_card.html" %}
+{% endblock %}
+
 {% block main %}
 <div class="col align-center">
-
-    {% include "./popups/add_credit_card.html" %}
 
     <h1 class="mt">Seus cartões de crédito</h1>
     <section class="row wrap justify-center align-center w-100">
@@ -25,7 +28,7 @@ Cartões de Crédito
             {% endif %}
                 <div class="row justify-center options">
                     <button type="button" href="/transactions/creditcard/{{ card['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver fatura</button>
-                    <button type="button" href="/" class="btn">Editar cartão</button>
+                    <button type="button" value="set-credit" id="{{ card['id'] }}" onclick="set_value('set_credit', this); show_popup(element=this);" class="btn">Editar cartão</button>
                 </div>
                 <p class="muted">Última movimentação:<br>{{ card['lastest_move'] | date_stamp }}</p>
             </div>

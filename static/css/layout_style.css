@@ -133,6 +133,24 @@ nav {
     flex-direction: column;
 }
 
+.green_input {
+    background-color: rgba(68, 189, 50, 0.5);
+    border-bottom: 2px solid #4cd137;
+}
+
+.green_input:hover {
+    outline: 0.5px solid black;
+}
+
+.red_input {
+    background-color: rgba(232, 65, 24, 0.5);
+    border-bottom: 2px solid #e84118;
+}
+
+.red_input {
+    outline:0.5px solid black;
+}
+
 .pop-up {
     z-index: 1;
     height: 100vh;

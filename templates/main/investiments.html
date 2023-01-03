@@ -8,6 +8,11 @@ Investimentos
 <link rel="stylesheet" href="/static/css/base_blocks.css">
 {% endblock %}
 
+{% block aboveall %}
+    {% include "./popups/add_investiment.html" %}
+    {% include "./popups/set_investiment.html" %}
+{% endblock %}
+
 {% block main %}
 
 <div class="col align-center">
@@ -24,7 +29,7 @@ Investimentos
 
                 <div class="row justify-center options">
                     <button class="btn btn-primary" href="/transactions/investment/{{ investment['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
-                    <button class="btn">Editar</button>
+                    <button type="button" value="set-invest" id="{{ investment['id'] }}" onclick="set_value('set-investiment', this); show_popup(element=this);" class="btn">Editar</button>
                 </div>
                 <p class="muted">Última mudança:<br>{{ investment["lastest_move"] | date_stamp }}</p>
             </div>

@@ -1,8 +1,8 @@
-<div class="pop-up" id="debt-pop-up">
+<div class="pop-up" id="set-debt-pop-up">
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2 class="text-center">Dados da Dívida</h2>
-        <form autocomplete="off" id="add-debt-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_debt', operation='add') }}">
+        <form autocomplete="off" id="add-debt-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_debt', operation='debt') }}">
             <label for="name">Nome da dívida:</label>
             <input type="text" name="name" placeholder="Ex.: Dívida com Maria">
             <label for="debt_date">Data de pagamento:</label>
@@ -10,7 +10,8 @@
             <label class="muted">Apenas se houver uma data limite!</label>
             <label for="debt_value">Valor da dívida:</label> 
             <input class="color_money_listener" type="number" step="0.01" name="debt_value" placeholder="200,00">
-            <label class="muted my-0 t-red" hidden>Valor inválido!</label>            
+            <label class="muted my-0 t-red" hidden>Valor inválido!</label>
+            <input type="hidden" name="id_debt" id="set-debt" value="">        
             <button type="submit">Adicionar dívida</button>
         </form>
     </div>

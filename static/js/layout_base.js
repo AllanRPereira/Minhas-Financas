@@ -27,17 +27,28 @@ function show(element) {
     }
 }
 
+function set_value(id, element) {
+    // Seta um valor para o atributo value do elemento com o id recebeido
+    // Obtém o valor do id do element
+
+    let input_selected = document.getElementById(id);
+    input_selected.value = element.id;
+}
+
+let older_popup = "";
 let opened_popup = "";
 function show_popup(element="", id="") {
     // Função utilizada para exibir uma mensagem que abrange a tela
     // Utilizada para exibir os formulários de adicionar (Cartão, Inves, ...)
-
     if (id == "") {
         popup = document.getElementById(`${element.attributes['value'].value}-pop-up`);
     } else {
         popup = document.getElementById(id)
     }
     popup.style["display"] = "flex";
+    if (opened_popup != "") {
+        older_popup = opened_popup;
+    }
     opened_popup = popup;
 }
 
@@ -46,7 +57,6 @@ function close_popup() {
 
     if (opened_popup != "") {
         opened_popup.style["display"] = "none";
-        opened_popup = "";
     }
 }
 
@@ -56,7 +66,14 @@ function change_popup(id_popup) {
     if (opened_popup != "") {
         close_popup();
     }
-    show_popup(id=id_popup);
+    if (id_popup == "comeback") {
+        let temp = older_popup;
+        opened_popup = "";
+        older_popup = "";
+        show_popup("", temp.id);
+    } else {
+        show_popup("", id_popup);
+    }
 }
 
 function show_message(message, code) {
@@ -115,6 +132,44 @@ function update_options() {
     });
 }
 
+function input_color_money(event) {
+    // Função usada para alterar a cor de um input monetário dependendo do saldo
+
+    let input = event.target;
+    let label = input.nextElementSibling;
+    let number_value = Number(input.value);
+    if (Object.is(number_value, NaN)) {
+        label.hidden=false;
+    } else {
+        if (number_value > 0) {
+            input.style["background-color"] = "rgba(68, 189, 50, 0.5)";
+            input.style["border-bottom"] = "2px solid #4cd137";
+            input.style["outline"] = "0.5px solid #4cd137";
+            input.onfocus = function () {
+                input.style["outline"] = "0.5px solid #4cd137";
+            }
+        } else if (number_value == 0) {
+            input.style["background-color"] = "";
+            input.style["border-bottom"] = "";
+            input.style["outline"] = "";
+            input.onfocus = "";
+        } else {
+            input.style["background-color"] = "rgba(232, 65, 24, 0.5)";
+            input.style["border-bottom"] = "2px solid #c23616";
+            input.style["outline"] = "0.5px solid #c23616";
+            input.onfocus = function () {
+                input.style["outline"] = "0.5px solid #c23616";
+            }
+        }
+        if (label.hidden == false) {
+            label.hidden = true;
+        }
+    }
+    input.onblur = function() {
+        input.style["outline"] = "";
+    }
+}
+
 function transfer(button) {
     // Função para redirecionar de página
     window.location.assign(button.attributes.href.value);
@@ -139,6 +194,13 @@ window.addEventListener("load", function() {
             let message = await result.text();
             show_message(message, result.status);
         }
+    }
+
+    inputs_color_money = document.getElementsByClassName("color_money_listener");
+    for (let input of inputs_color_money) {
+        input.addEventListener("keyup", function(event) {
+            return input_color_money(event);
+        });
     }
 
     // Tecla para fechar popups
