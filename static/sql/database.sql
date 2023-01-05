@@ -33,12 +33,17 @@ CREATE TABLE transactions (
 );
 
 -- Métodos de pagamento, como cartão, dívidas e investimentos
+-- Extra data:
+    -- Cartão de crédito: Vencimento
+    -- Investimento: Rendimento
+    -- Dívida: Data para pagamento
 CREATE TABLE payment_content (
     id INTEGER NOT NULL,
     id_user INTEGER NOT NULL,
     type INTEGER NOT NULL,
     name VARCHAR(25),
     balance REAL DEFAULT 0,
+    extra_data REAL DEFAULT -1,
     PRIMARY KEY(id),
     FOREIGN KEY(id_user) REFERENCES users(id)
 );

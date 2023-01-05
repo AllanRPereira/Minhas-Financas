@@ -4,11 +4,11 @@
         <h2 class="text-center">Dados do Investimento</h2>
         <form autocomplete="off" id="add-investment-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_investiment', operation='add') }}">
             <label for="name">Nome do Investimento:</label>
-            <input type="text" name="name" placeholder="Ex.: Picpay">
+            <input type="text" name="name" placeholder="Ex.: Picpay" required>
             <label for="rendiment">Rendimento Mensal:</label>
-            <input type="number" name="rendiment" step="0.01" placeholder="3,99%">
+            <input type="number" name="rendiment" step="0.01" placeholder="3,99%" required>
             <label for="current_amount">Montante Atual:</label> 
-            <input class="color_money_listener" type="number" step="0.01" name="current_amount" placeholder="200,00">
+            <input class="color_money_listener" type="number" step="0.01" name="current_amount" placeholder="200,00" required>
             <label class="muted my-0 t-red" hidden>Valor inválido!</label>            
             <button type="submit">Adicionar investimento</button>
         </form>

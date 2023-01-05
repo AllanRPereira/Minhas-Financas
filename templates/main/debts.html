@@ -31,13 +31,13 @@ Dívidas
             {% endif %}
                 <div class="row justify-center options">
                     <button class="btn btn-primary" href="/transactions/debt/{{ debt['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver alterações</button>
-                    <button type="button" value="set-debt" id="{{ debt['id'] }}" onclick="set_value('set-debt', this); show_popup(element=this);" class="btn">Editar</button>
+                    <button type="button" data-popup-input="set-debt" data-id="{{ debt['id'] }}" onclick="set_value({id:'set-debt', element:this}); show_popup({element:this});" class="btn">Editar</button>
                 </div>
                 <p class="muted">Última mudança:<br>{{ debt["lastest_move"] | date_stamp}}</p>
             </div>
         {% endfor %}
     </section>
-    <button class="btn btn-primary" value="debt" onclick="show_popup(element=this)">Adicionar Dívida</button>
+    <button class="btn btn-primary" data-popup-input="debt" onclick="show_popup({element:this})">Adicionar Dívida</button>
 </div>
 
 

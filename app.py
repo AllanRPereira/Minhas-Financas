@@ -10,7 +10,7 @@ import os
 from time import time
 from datetime import datetime
 from utils import *
-from db_operations import *
+from model.database import *
 
 app = Flask(__name__)
 
@@ -51,7 +51,7 @@ CREDIT_CARD = 1
 INVESTMENTS = 2
 DEBTS = 3
 
-DATABASE = f"{os.getcwd()}/minhasfinancas.db"
+DATABASE = f"{os.getcwd()}/model/minhasfinancas.db"
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -353,16 +353,17 @@ def operator_credit_card(operation):
         return ("A fatura inicial deve ser um número", 400)
     
     try:
-        due_date = datetime.fromisoformat(due_date).timestamp()
+        due_date = int(due_date)
     except Exception as error:
-        return ("Campo de data não é valido "+ str(error), 400)
+        return ("Campo de vencimento não é valido "+ str(error), 400)
     
     
     db = get_db()
     if operation == "add":
-        add_payment(db, name, initial_bill, CREDIT_CARD)
+        add_payment(db, name, initial_bill, CREDIT_CARD, extra_data=due_date)
     else:
-        return "TODO"
+        set_payment(db, name=name, balance=initial_bill, type=CREDIT_CARD, extra_data=due_date)
+        return ("Alterado com sucesso! Recarregue a página", 200)
     return ("Adicionado com sucesso! Recarregue a página", 200)
 
 
@@ -403,9 +404,10 @@ def operator_debt(operation):
     
     db = get_db()
     if operation == "add":
-        add_payment(db, name, current_amount, DEBTS)
+        add_payment(db, name, current_amount, DEBTS, extra_data=date_debt)
     else:
-        return "TODO", 200
+        set_payment(db, name=name, balance=current_amount, type=DEBTS, extra_data=date_debt)
+        return ("Alterado com sucesso! Recarregue a página", 200)
     return ("Adicionado com sucesso! Recarregue a página", 200)
 
 
@@ -442,9 +444,11 @@ def operator_investiment(operation):
     
     db = get_db()
     if operation == "add":
-        add_payment(db, name, current_amount, INVESTMENTS)
+        add_payment(db, name, current_amount, INVESTMENTS, extra_data=rendiment)
     else:
-        return "TODO", 200
+        set_payment(db, name=name, balance=current_amount, type=INVESTMENTS, extra_data=rendiment)
+        return ("Alterado com sucesso! Recarregue a página", 200)
+
     return ("Adicionado com sucesso! Recarregue a página", 200)
 
 @app.route("/<string:operation>/transaction", methods=["POST"])
@@ -488,7 +492,7 @@ def operator_transaction(operation):
         "from_payment" : check[0],
         "to" : request.form.get("to").lower(),
         "to_payment" : check[1],
-        "description" : request.form.get("description")
+        "description" : request.form.get("description", "")
     }
     
     if operation == "add":

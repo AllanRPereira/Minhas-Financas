@@ -21,7 +21,7 @@ def add_user(db, email, hash):
     except Exception as error:
         return error_handler(str(error))
 
-def add_payment(db, name, balance, type_pay, id_user=""):
+def add_payment(db, name, balance, type_pay, id_user="", extra_data=-1):
     """
     Adiciona uma nova forma de pagamento (payment_content)
     associando-a à um usuário.
@@ -30,16 +30,17 @@ def add_payment(db, name, balance, type_pay, id_user=""):
     name -> Nome do método de pagamento
     balance -> Saldo inicial do método
     type_pay -> Tipo de Método de pagamento (Carteira, Cartão, Investimento e Dívida)
+    extra_data -> Dado extra de cada método de pagamento, indivídual para cada!
     """
 
     query = """
-    INSERT INTO payment_content (id_user, type, name, balance)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO payment_content (id_user, type, name, balance, extra_data)
+    VALUES (?, ?, ?, ?, ?)
     """
 
     if id_user == "": id_user = session["id_user"]
 
-    id_payment = db.execute(query, (id_user, type_pay, name, balance)).lastrowid
+    id_payment = db.execute(query, (id_user, type_pay, name, balance, extra_data)).lastrowid
 
     return id_payment
 
@@ -563,6 +564,18 @@ def set_user_information(db, id_user, password=False, email=False):
     bind += id_user
     
     db.execute(query, bind)
+    return True
+
+def set_payment(db, **kwargs):
+    kwargs["id_user"] = session["id_user"]
+    pair_set = []
+    binds = []
+    for key, value in kwargs.items():
+        pair_set.append(f"{key}=?")
+        binds.append(value)
+    binds.append(kwargs["id_payment"])
+    query = F"UPDATE payment_content SET {','.join(pair_set)} WHERE id=?"
+    print(query, tuple(binds))
     return True
 
 def delete_token(db, id_token):

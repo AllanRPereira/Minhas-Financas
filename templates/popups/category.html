@@ -43,7 +43,7 @@
 
         <form autocomplete="off" id="add-from" class="form-transaction onformsubmit" method="POST" action="{{ url_for('add_from') }}">
             <label for="name">Nome da Origem:</label>
-            <input type="text" name="name" placeholder="Ex.: Salário Jovem Aprendiz">
+            <input type="text" name="name" placeholder="Ex.: Salário Jovem Aprendiz" required>
             
             <div class="col w-100 my">
                 <label for="category">Categoria da Origem:</label>

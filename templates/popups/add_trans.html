@@ -4,18 +4,18 @@
         <h2 class="text-center">Dados da Transação</h2>
         <form autocomplete="off" id="add-transaction-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_transaction', operation='add') }}">
             <label for="name">Nome da transação:</label>
-            <input type="text" name="name" placeholder="Ex.: Presente de Natal">
+            <input type="text" name="name" placeholder="Ex.: Presente de Natal" required>
             
             <label for="value">Valor da transação:</label>
-            <input class="color_money_listener" type="number" step="0.01" name="value" placeholder="Ex.: 100, -100, ...">
+            <input class="color_money_listener" type="number" step="0.01" name="value" placeholder="Ex.: 100, -100, ..." required>
             <label class="muted my-0 t-red" hidden>Valor inválido!</label>
             <label for="datetime">Data:</label>
-            <input type="date" name="datetime" placeholder="19/8/2022">
+            <input type="date" name="datetime" placeholder="19/8/2022" required>
             
             <div class="col w-100 my">
                 <label for="from">Origem da grana:</label>
                 <div class="w-100 row align-center">
-                    <select id="from_select" class="btn-pure" name="from">
+                    <select id="from_select" class="btn-pure" name="from" required>
                         <option selected value="">Ex.: Carteira, Investimento, ...</option>
                         {% for option in from_options  %}
                             <option value="{{ option }}">{{ option.capitalize() }}</option>
@@ -29,7 +29,7 @@
             <div class="col w-100 my">
                 <label for="to">Destino da grana:</label>
                 <div class="w-100 row align-center">
-                    <select id="to_select" class="btn-pure" name="to">
+                    <select id="to_select" class="btn-pure" name="to" required>
                         <option selected value="">Ex.: Amazon, Americanas, ...</option>
                         {% for option in to_options %}
                             <option value="{{ option }}">{{ option.capitalize() }}</option>

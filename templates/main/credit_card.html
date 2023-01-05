@@ -28,13 +28,13 @@ Cartões de Crédito
             {% endif %}
                 <div class="row justify-center options">
                     <button type="button" href="/transactions/creditcard/{{ card['id'] }}" class="btn btn-primary" onclick="transfer(this)">Ver fatura</button>
-                    <button type="button" value="set-credit" id="{{ card['id'] }}" onclick="set_value('set_credit', this); show_popup(element=this);" class="btn">Editar cartão</button>
+                    <button type="button" data-id="{{ card['id'] }}" data-popup-input="set-credit" onclick="set_value({id:'set-credit', element:this}); show_popup({element:this});" class="btn">Editar cartão</button>
                 </div>
                 <p class="muted">Última movimentação:<br>{{ card['lastest_move'] | date_stamp }}</p>
             </div>
         {% endfor %}
     </section>
-    <button class="btn btn-primary" value="credit" onclick="show_popup(element=this)">Adicionar Cartão</button>
+    <button class="btn btn-primary" data-popup-input="credit" onclick="show_popup({element:this})">Adicionar Cartão</button>
 
 </div>
 

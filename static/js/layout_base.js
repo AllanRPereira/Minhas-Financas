@@ -27,52 +27,75 @@ function show(element) {
     }
 }
 
-function set_value(id, element) {
+function set_value({id, element} = {}) {
     // Seta um valor para o atributo value do elemento com o id recebeido
     // Obtém o valor do id do element
 
     let input_selected = document.getElementById(id);
-    input_selected.value = element.id;
+    input_selected.value = element.getAttribute("data-id");
 }
 
-let older_popup = "";
-let opened_popup = "";
-function show_popup(element="", id="") {
-    // Função utilizada para exibir uma mensagem que abrange a tela
-    // Utilizada para exibir os formulários de adicionar (Cartão, Inves, ...)
-    if (id == "") {
-        popup = document.getElementById(`${element.attributes['value'].value}-pop-up`);
+let queue = [];
+function insert_queue(element) {
+    if (queue.length < 5) {
+        queue.push(element);
     } else {
-        popup = document.getElementById(id)
+        queue.shift();
+        queue.push(element);
+    }
+}
+
+function delete_last_queue() {
+    return queue.pop();    
+}
+
+function get_last_queue() {
+    let position = queue.length - 1;
+    if (position >= 0) {
+        return queue[position];
+    } else {
+        return "";
+    }
+} 
+
+function show_popup({element, id, object} = {}) {
+    // Função utilizada para exibir uma mensagem que abrange a tela
+    // Utilizada para exibir os formulários de adicionar (Cartão, Investimentos, ...)
+
+    if (id != undefined) {
+        popup = document.getElementById(id);
+    } else if (element != undefined) {
+        popup = document.getElementById(`${element.getAttribute("data-popup-input")}-pop-up`);   
+    } else if (object != undefined) {
+        popup = object;
+    } else {
+        return false;
     }
     popup.style["display"] = "flex";
-    if (opened_popup != "") {
-        older_popup = opened_popup;
-    }
-    opened_popup = popup;
+    insert_queue(popup);
 }
 
 function close_popup() {
     // Função que esconde a atual popup aberta
-
-    if (opened_popup != "") {
-        opened_popup.style["display"] = "none";
+    element = get_last_queue();
+    if (element) {
+        element.style["display"] = "None";
     }
 }
 
 function change_popup(id_popup) {
     // Função que altera entre duas popups
 
-    if (opened_popup != "") {
+    if (get_last_queue()) {
         close_popup();
     }
     if (id_popup == "comeback") {
-        let temp = older_popup;
-        opened_popup = "";
-        older_popup = "";
-        show_popup("", temp.id);
+        delete_last_queue(); // Elimina a mensagem
+        delete_last_queue(); // Elimina o subform
+        let popup = get_last_queue(); // Form principal
+        show_popup({object:popup});
     } else {
-        show_popup("", id_popup);
+        show_popup({id:id_popup});
     }
 }
 

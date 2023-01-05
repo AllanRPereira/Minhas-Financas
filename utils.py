@@ -2,7 +2,7 @@ from functools import wraps
 from flask import session, redirect
 from flask_mail import Message
 from datetime import datetime
-from db_operations import get_main_incomes, get_main_expenses, get_expenses_by_category
+from model.database import get_main_incomes, get_main_expenses, get_expenses_by_category
 
 def login_required(function):
     """
