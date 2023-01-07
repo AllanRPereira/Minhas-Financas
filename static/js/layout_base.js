@@ -3,6 +3,9 @@ function dropbox_js(event) {
     let list;
     if (event.target.tagName == "DIV") {
         list = event.target.children;
+    } else if (event.target.tagName == "I") {
+        // No caso de clicar no ícone na barra de navegação
+        list = event.target.parentElement.parentElement.children;
     } else {
         list = event.target.parentElement.children;
     }
@@ -234,8 +237,7 @@ window.addEventListener("load", function() {
     });
 
     for (let dropbox of document.getElementsByClassName("dropbox")) {
-        dropbox.addEventListener("mouseover", dropbox_js);
-        dropbox.addEventListener("mouseout", dropbox_js);
+        dropbox.addEventListener("click", dropbox_js);
     }
     for (let mob_dropbox of document.getElementsByClassName("mobile-dropbox")) {
         mob_dropbox.addEventListener("click", dropbox_js);

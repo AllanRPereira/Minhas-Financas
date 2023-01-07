@@ -38,7 +38,7 @@ footer a {
 }
 
 nav {
-    width:100%;
+    width:95%;
 }
 
 .nav-element {
@@ -62,9 +62,6 @@ nav {
 }
 
 .dropbox {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     width: 20%;
     font-size:1.2em;
 }
@@ -73,6 +70,7 @@ nav {
     display: flex;
     height: 2em;
     width: 100%;
+    margin-bottom: 2px;
     text-decoration: none;
     align-items: center;
     justify-content: center;
@@ -84,6 +82,10 @@ nav {
 
 .drop-element:hover {
     background-color:#105191;
+}
+
+.drop-element, .nav-element {
+    border-radius: 5px;
 }
 
 .mobile-dropbox {
@@ -275,6 +277,10 @@ nav {
 
 #form-content button:hover {
     background-color: #105191;
+}
+
+#normal-nav {
+    gap: 0.75em;
 }
 
 

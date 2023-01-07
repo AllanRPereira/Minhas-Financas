@@ -1,6 +1,7 @@
 <nav id="normal-nav" class="row">
     <div class="dropbox">
-        <a class="header drop-element" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i>&nbsp Início</a>
+        <a class="header drop-element"><i class="fa-solid fa-house"></i>&nbsp Home</a>
+        <a class="drop-element" href="{{ url_for('index') }}" style="display:none">Início</a>
         <a class="drop-element" href="{{ url_for('logout') }}" style="display:none;">Sair da conta</a>
     </div>
     <div class="dropbox">
