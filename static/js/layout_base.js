@@ -126,7 +126,7 @@ function update_options() {
         teller_category : "to_category_select",
         income_category : "from_category_select"
     };
-    fetch("/get_options", {
+    fetch("/options", {
         method : "GET"
     }).then(function(response) {
         response.json().then(function(elements) {

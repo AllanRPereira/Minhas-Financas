@@ -4,24 +4,31 @@ from flask_mail import Mail, Message
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-import sqlite3
-import jwt
-import os
 from time import time
 from datetime import datetime
 from utils import *
 from model.database import *
+from routes.credit_cards.credit_cards import credit_page
+from routes.debts.debts import debt_page
+from routes.investments.investments import invest_page
+from consts import CREDIT_CARD, WALLET, INVESTMENTS, DEBTS
+import sqlite3
+import jwt
+import os
+import logging as log
 
 app = Flask(__name__)
+app.register_blueprint(credit_page)
+app.register_blueprint(debt_page)
+app.register_blueprint(invest_page)
 
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.jinja_env.filters["brl"] = brl
 app.jinja_env.filters["percen"] = percen
 app.jinja_env.filters["date_stamp"] = date_stamp
 
-
 # Configure e-mail
-if os.environ.get("EMAIL_PASS") == None:
+if os.environ.get("EMAIL_PASS") is None:
     raise Exception("Senha do acesso ao email não foi definida!")
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -41,23 +48,9 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configuração da chave de codificação dos tokens
-if os.environ.get("TOKEN_KEY") == None:
+TOKEN_KEY = os.environ.get("TOKEN_KEY")
+if TOKEN_KEY is None:
     raise Exception("Chave de codificação dos tokens não foi definida!!")
-else:
-    TOKEN_KEY = os.environ.get("TOKEN_KEY")
-
-WALLET = 0
-CREDIT_CARD = 1
-INVESTMENTS = 2
-DEBTS = 3
-
-DATABASE = f"{os.getcwd()}/model/minhasfinancas.db"
-def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = sqlite3.connect(DATABASE)
-        g._database = db
-    return db
 
 @app.teardown_appcontext
 def close_db(exception):
@@ -76,39 +69,20 @@ def index():
     db = get_db()
     payments_balance = get_payments_balance(db)
     graphs = get_statics(db)
-    options = get_options() # Utilizado para preencher os selects do campos de adicionar transações
+    options = get_options(db) # Utilizado para preencher os selects do campos de adicionar transações
 
     return render_template("main/index.html",payments=payments_balance, graphs=graphs, **options)
 
-@app.route("/get_options", methods=["GET"])
+@app.route("/options", methods=["GET"])
 @login_required
-def get_options():
+def options():
     """
     Rota utilizada pelo layout.js para atualizar dinamicamente os Incomes e os
     Tellers disponíveis no momento de adicionar uma transação.
     """
 
     db = get_db()
-
-    payment_options = get_payment_options(db)
-    to_options = get_to_options(db)
-    to_options.extend(payment_options)
-    to_options = sorted(to_options)
-
-    from_options = get_from_options(db)
-    from_options.extend(payment_options)
-    from_options = sorted(from_options)
-
-    categorys = get_categorys(db)
-
-    data = {
-        "to_options" : to_options,
-        "from_options" : from_options,
-        "income_category" : categorys["income"],
-        "teller_category" : categorys["teller"]
-    }
-
-    return data
+    return get_options(db)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -322,134 +296,6 @@ def filter_transactions(type_pay, id):
         return render_template("main/transactions.html", data=data)
     
     return error_handler("URL inválida!")
-
-@app.route("/creditcard", methods=["GET"])
-@login_required
-def creditcard():
-    #Rota para obter e exibir os cartões de crédito
-
-    db = get_db()
-    creditcard = get_data_payment(db, CREDIT_CARD)
-    options = get_options()
-    return render_template("main/credit_card.html", cards=creditcard, **options)
-
-@app.route("/<string:operation>/creditcard", methods=["POST"])
-@login_required
-def operator_credit_card(operation):
-    # Rota utilizado pelo layout.js para adicionar um novo cartão
-
-    if operation not in ["add", "set"]:
-        return ("Url é inválida", 404)
-
-    name = request.form.get("name", "")
-    due_date = request.form.get("due_date", "")
-    initial_bill = format_number(request.form.get("initial_bill", ""))
-    status, content = check_name(name)
-    if not status:
-        return content
-    try:
-        initial_bill = float(initial_bill)
-    except ValueError:
-        return ("A fatura inicial deve ser um número", 400)
-    
-    try:
-        due_date = int(due_date)
-    except Exception as error:
-        return ("Campo de vencimento não é valido "+ str(error), 400)
-    
-    
-    db = get_db()
-    if operation == "add":
-        add_payment(db, name, initial_bill, CREDIT_CARD, extra_data=due_date)
-    else:
-        set_payment(db, name=name, balance=initial_bill, type=CREDIT_CARD, extra_data=due_date)
-        return ("Alterado com sucesso! Recarregue a página", 200)
-    return ("Adicionado com sucesso! Recarregue a página", 200)
-
-
-@app.route("/debts", methods=["GET"])
-@login_required
-def debts():
-    # Rota utilizada para visualizar as dívidas de um usuário
-
-    db = get_db()
-    debts = get_data_payment(db, DEBTS)
-    options = get_options()
-    return render_template("main/debts.html", debts=debts, **options)
-
-@app.route("/<string:operation>/debt", methods=["POST"])
-@login_required
-def operator_debt(operation):
-    # Rota utilizado pelo layout.js para adicionar uma nova dívida
-    if operation not in ("add", "set"):
-        return ("Url é inválida", 404)
-
-    name = request.form.get("name")
-    date_debt = request.form.get("debt_date")
-    current_amount = format_number(request.form.get("debt_value"))
-    status, content = check_name(name)
-    if not status:
-        return content
-
-    try:
-        current_amount = float(current_amount)
-    except ValueError:
-        return ("Rendimento deve ser número", 400)
-    
-    try:
-        date_debt = datetime.fromisoformat(date_debt).timestamp()
-    except Exception as error:
-        return ("Campo de data não é valido "+ str(error), 400)
-    
-    
-    db = get_db()
-    if operation == "add":
-        add_payment(db, name, current_amount, DEBTS, extra_data=date_debt)
-    else:
-        set_payment(db, name=name, balance=current_amount, type=DEBTS, extra_data=date_debt)
-        return ("Alterado com sucesso! Recarregue a página", 200)
-    return ("Adicionado com sucesso! Recarregue a página", 200)
-
-
-@app.route("/investiments", methods=["GET"])
-@login_required
-def investiments():
-    # Rota utilizada para exibir os investimentos de um usuário
-
-    db = get_db()
-    investments = get_data_payment(db, INVESTMENTS)
-    options = get_options()
-    return render_template("main/investiments.html", investments=investments, **options)
-
-@app.route("/<string:operation>/investiment", methods=["POST"])
-@login_required
-def operator_investiment(operation):
-    # Rota utilizada pelo layout.js para adicionar um novo investimento para um usuário
-
-    if operation not in ("add", "set"):
-        return "Url é inválida", 404
-
-    name = request.form.get("name")
-    rendiment = request.form.get("rendiment").replace("%", "").replace(",", ".")
-    current_amount = format_number(request.form.get("current_amount"))
-    status, content = check_name(name)
-    if not status:
-        return content
-
-    try:
-        rendiment = float(rendiment)
-        current_amount = float(current_amount)
-    except ValueError:
-        return ("Rendimento e quantidade devem ser número", 400)
-    
-    db = get_db()
-    if operation == "add":
-        add_payment(db, name, current_amount, INVESTMENTS, extra_data=rendiment)
-    else:
-        set_payment(db, name=name, balance=current_amount, type=INVESTMENTS, extra_data=rendiment)
-        return ("Alterado com sucesso! Recarregue a página", 200)
-
-    return ("Adicionado com sucesso! Recarregue a página", 200)
 
 @app.route("/<string:operation>/transaction", methods=["POST"])
 @login_required

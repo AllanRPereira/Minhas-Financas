@@ -2,7 +2,7 @@
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2 class="text-center">Insira os novos dados<wbr> do investimento</h2>
-        <form autocomplete="off" id="set-investment-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_investiment', operation='set') }}">
+        <form autocomplete="off" id="set-investment-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('invest_page.operator_investiment', operation='set') }}">
             <label for="name">Nome do Investimento:</label>
             <input type="text" name="name" placeholder="Ex.: Picpay">
             <label for="rendiment">Rendimento Mensal:</label>

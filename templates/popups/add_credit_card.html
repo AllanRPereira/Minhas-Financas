@@ -2,7 +2,7 @@
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2 class="text-center">Dados do Cartão de Crédito</h2>
-        <form autocomplete="off" id="add-credit-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_credit_card', operation='add') }}">
+        <form autocomplete="off" id="add-credit-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('credit_page.operator_credit_card', operation='add') }}">
             <label for="name">Nome do cartão:</label>
             <input type="text" name="name" placeholder="Ex.: Picpay" required>
             <label for="due_date">Dia do vencimento:</label>

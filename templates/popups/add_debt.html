@@ -2,7 +2,7 @@
     <div id="form-content">
         <i id="close-button" class="fa-solid fa-xmark" onclick="close_popup(this);"></i>
         <h2 class="text-center">Dados da Dívida</h2>
-        <form autocomplete="off" id="add-debt-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('operator_debt', operation='add') }}">
+        <form autocomplete="off" id="add-debt-form" class="form-transaction onformsubmit" method="POST" action="{{ url_for('debt_page.operator_debt', operation='add') }}">
             <label for="name">Nome da dívida:</label>
             <input type="text" name="name" placeholder="Ex.: Dívida com Maria" required>
             <label for="debt_date">Data de pagamento:</label>

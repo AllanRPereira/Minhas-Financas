@@ -21,10 +21,10 @@ def random_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 # Reset database
-os.remove("minhasfinancas.db")
+os.remove("model/minhasfinancas.db")
 query_tables = open("static/sql/database.sql", "r").read()
 password = generate_password_hash("test")
-db = sqlite3.connect("minhasfinancas.db")
+db = sqlite3.connect("model/minhasfinancas.db")
 db.executescript(query_tables)
 print("Banco de dados resetado!")
 

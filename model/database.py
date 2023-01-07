@@ -1,5 +1,7 @@
-from flask import session
+from flask import session, g
 from datetime import datetime
+import sqlite3
+import os
 
 """
 Importante:
@@ -12,6 +14,10 @@ Há quatro tipos de payment_content:
 
 Códigos utilizados em funções que necessitam de type_pay
 """
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL is None:
+    raise Exception("Local do banco de dados não informado!")
 
 def add_user(db, email, hash):
     try:
@@ -167,19 +173,19 @@ def get_data_payment(db, type_pay):
     da última transação com esse método de pagamento
 
     db -> Conexão com o banco de dados
-    type_pay -> Código do pagamento
+    type_pay -> Tipo de pagamento
 
     """
     
     query = """
     SELECT id, name, balance FROM payment_content
     WHERE id_user=? AND type=?
+    ORDER BY id
     """
 
     data = []
     result = db.execute(query, (session["id_user"], type_pay))
-    i = 0
-    for row in result:
+    for i, row in enumerate(result):
         if row == (None, None, None):
             break
 
@@ -190,8 +196,7 @@ def get_data_payment(db, type_pay):
             "lastest_move" : get_lastest_move(db, row[0])
         }
         data.append(element)
-        i += 1
-
+        
     return data
 
 def get_lastest_move(db, id_method):
@@ -267,6 +272,7 @@ def get_payment_options(db):
     query = """
     SELECT LOWER(name) FROM payment_content
     WHERE id_user=?
+    ORDER BY id
     """
     cursor = db.execute(query, (session["id_user"], ))
     return run_over_row(cursor)
@@ -520,6 +526,39 @@ def get_transactions(db, filter=""):
             data["rows"].append(element)
     return data
 
+def get_options(db):
+    """
+    Rota utilizada pelo layout.js para atualizar dinamicamente os Incomes e os
+    Tellers disponíveis no momento de adicionar uma transação.
+    """
+
+    payment_options = get_payment_options(db)
+    to_options = get_to_options(db)
+    to_options.extend(payment_options)
+    to_options = sorted(to_options)
+
+    from_options = get_from_options(db)
+    from_options.extend(payment_options)
+    from_options = sorted(from_options)
+
+    categorys = get_categorys(db)
+
+    data = {
+        "to_options" : to_options,
+        "from_options" : from_options,
+        "income_category" : categorys["income"],
+        "teller_category" : categorys["teller"]
+    }
+
+    return data
+
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = sqlite3.connect(DATABASE_URL)
+        g._database = db
+    return db
+
 def get_user_pass_by_email(db, email, password=True):
     """
     Obtém os dados de um usuário da tabela 'users'.
@@ -573,9 +612,11 @@ def set_payment(db, **kwargs):
     for key, value in kwargs.items():
         pair_set.append(f"{key}=?")
         binds.append(value)
-    binds.append(kwargs["id_payment"])
-    query = F"UPDATE payment_content SET {','.join(pair_set)} WHERE id=?"
-    print(query, tuple(binds))
+    binds.append(kwargs["id"])
+    binds = tuple(binds)
+
+    query = f"UPDATE payment_content SET {','.join(pair_set)} WHERE id=?"
+    db.execute(query, binds)
     return True
 
 def delete_token(db, id_token):
