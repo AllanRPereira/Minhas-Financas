@@ -1,3 +1,28 @@
+.group-buttons {
+    gap: 0.75em;
+}
+
+#form-filter-transaction {
+    display: flex;
+    width: 50%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    gap: .7em;
+    border: 1px dotted rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    padding-top: 10px;
+    margin-bottom: 10px;
+}
+
+#filter_hidden_input {
+    width: 60%;
+    text-align: center;
+    height: 2em;
+    font-size: 1em;
+}
+
 @media screen and (max-width:740px) {
     td {
         font-size: 0.9em;

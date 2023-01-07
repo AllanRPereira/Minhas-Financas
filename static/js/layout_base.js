@@ -129,7 +129,7 @@ function update_options() {
         teller_category : "to_category_select",
         income_category : "from_category_select"
     };
-    fetch("/options", {
+    fetch("/js/options", {
         method : "GET"
     }).then(function(response) {
         response.json().then(function(elements) {
@@ -221,6 +221,8 @@ window.addEventListener("load", function() {
             show_message(message, result.status);
         }
     }
+
+    update_options();
 
     inputs_color_money = document.getElementsByClassName("color_money_listener");
     for (let input of inputs_color_money) {

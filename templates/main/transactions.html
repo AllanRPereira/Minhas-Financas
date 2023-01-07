@@ -6,13 +6,48 @@ Transações
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/index.css">
-<link rel="stylesshet" href="/static/css/transactions.css">
+<link rel="stylesheet" href="/static/css/transactions.css">
+<link rel="stylesheet" href="/static/css/base_blocks.css">
+
 {% endblock %}
 
 {% block main %}
     <h1 class="center mt">
         Suas transações:
     </h1>
+    <h3>Escolha uma opção para filtrar</h3>
+    <form id="form-filter-transaction" method="POST" action="{{ request.url }}" onsubmit="">
+        <div class="row form-group">
+            <label for="year_month">Filtra por mês e ano:</label>
+            <input id="year_month" data-hidden="month" type="radio" value="year_month" name="type_filter">
+        </div>
+        <div class="row form-group">
+            <label for="year">Filtrar apenas por ano:</label>
+            <input id="year" type="radio" data-place="Ano" data-min="{{ min_year() }}" data-max="{{ max_year() }}" data-hidden="number" value="year" name="type_filter">
+        </div>
+        <input name="data_filter" id="filter_hidden_input" type="hidden">
+        <div class="row group-buttons">
+            <button id="send-filter" class="btn btn-primary" type="submit">Filtrar</button>
+            <button id="reload" class="btn btn-alt" type="button" onclick="window.location.assign(window.location.href);">Ver Tudo</button>
+        </div>
+    </form>
+    <script>
+        let radio_inputs = document.querySelectorAll("input[name=type_filter]");
+        for (let radio of radio_inputs) {
+            radio.addEventListener("change", function(event) {
+                let input_hidden = document.getElementById("filter_hidden_input");
+                let element = event.target;
+                let type = element.attributes["data-hidden"].value;
+                if (type == "number") {
+                    input_hidden.setAttribute("min", element.getAttribute("data-min"));
+                    input_hidden.setAttribute("max", element.getAttribute("data-max"));
+                    input_hidden.setAttribute("step", "1");
+                }
+                input_hidden.setAttribute("type", element.getAttribute("data-hidden"));
+                input_hidden.setAttribute("placeholder", element.getAttribute("data-place"));
+            })
+        }
+    </script>
     <table>
         <thead>
             <tr>

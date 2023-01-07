@@ -505,7 +505,7 @@ def get_transactions(db, filter=""):
     INNER JOIN yield AS yi ON yi.id=tr.id_from
     INNER JOIN payer AS pay ON pay.id=tr.id_to
     WHERE tr.id_user=? {filter}
-    ORDER BY tr.timestamp;
+    ORDER BY tr.timestamp DESC;
     """
     data = {
         "headers": ("Nome", "Valor", "Data", "Origem", "Destino")

@@ -44,6 +44,14 @@ def check_email(email):
         return False
     return True
 
+def min_year():
+    # Retorna o menor ano possível para filtragem das transações
+    return 2010
+
+def max_year():
+    # Retorna o ano atual para filtragem
+    return datetime.now().year
+
 def check_name(name):
     """
     Verifica se o nome de um cartão, investimento ou débito atende os requisitos

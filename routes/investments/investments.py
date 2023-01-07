@@ -48,7 +48,6 @@ def operator_investiment(operation):
                 raise Exception()
             id_payment = payments[relative_id_payment]
         except Exception as error:
-            print(error)
             return ("Investimento inválido para edição!")
         
         payload = {

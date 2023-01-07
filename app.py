@@ -11,7 +11,7 @@ from model.database import *
 from routes.credit_cards.credit_cards import credit_page
 from routes.debts.debts import debt_page
 from routes.investments.investments import invest_page
-from consts import CREDIT_CARD, WALLET, INVESTMENTS, DEBTS
+from consts import CREDIT_CARD, WALLET, INVESTMENTS, DEBTS, ALL_PAYMENTS
 import sqlite3
 import jwt
 import os
@@ -26,6 +26,12 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.jinja_env.filters["brl"] = brl
 app.jinja_env.filters["percen"] = percen
 app.jinja_env.filters["date_stamp"] = date_stamp
+functions = {
+    "min_year" : min_year,
+    "max_year" : max_year
+}
+app.jinja_env.globals.update(functions)
+
 
 # Configure e-mail
 if os.environ.get("EMAIL_PASS") is None:
@@ -69,11 +75,9 @@ def index():
     db = get_db()
     payments_balance = get_payments_balance(db)
     graphs = get_statics(db)
-    options = get_options(db) # Utilizado para preencher os selects do campos de adicionar transações
+    return render_template("main/index.html",payments=payments_balance, graphs=graphs)
 
-    return render_template("main/index.html",payments=payments_balance, graphs=graphs, **options)
-
-@app.route("/options", methods=["GET"])
+@app.route("/js/options", methods=["GET"])
 @login_required
 def options():
     """
@@ -262,13 +266,9 @@ def recovery_set():
 @login_required
 def transactions():
     # Obtém todas as transações de um usuário
+    return redirect("/transactions/all/0")
 
-    db = get_db()
-    data = get_transactions(db)
-    return render_template("main/transactions.html", data=data)
-
-
-@app.route("/transactions/<string:type_pay>/<int:id>", methods=["GET"])
+@app.route("/transactions/<string:type_pay>/<int:id>", methods=["GET", "POST"])
 @login_required
 def filter_transactions(type_pay, id):
     """
@@ -277,11 +277,46 @@ def filter_transactions(type_pay, id):
         id -> Índice do meio de pagamento dentro os possíveis de um usuário
         Obs.: Id não é o na tabela, é relativo ao usuário.
     """
+    extra_filter = ""
+
+    if request.method == "POST":
+        if request.form.get("type_filter") == "year_month":
+            year, month = request.form.get("data_filter").split("-")
+            if not year.isdigit() or not month.isdigit():
+                return error_handler("Data inválida!")
+            year, month = int(year), int(month)
+            timestamp_min = datetime(year=year, month=month, day=1).timestamp()
+
+            if month == 12:
+                year += 1
+                month = 1
+            else:
+                month += 1
+
+            timestamp_max = datetime(year=year, month=month, day=1).timestamp()
+
+        elif request.form.get("type_filter") == "year":
+            year = request.form.get("data_filter")
+            if not year.isdigit():
+                return error_handler("Data inválida!")
+            year = int(year)
+            if year > max_year() or year < min_year():
+                return error_handler("Ano selecionado é inválido!")
+            timestamp_min = datetime(year=year, month=1, day=1).timestamp()
+            timestamp_max = datetime(year=year+1, month=1, day=1).timestamp()
+
+        else:
+            return error_handler("Opção inválida para filtragem")
+
+        extra_filter = f"""
+        AND tr.timestamp >= {timestamp_min}
+        AND tr.timestamp <= {timestamp_max}
+        """
 
     dict_operator = {
         "creditcard" : CREDIT_CARD,
         "investment" : INVESTMENTS,
-        "debt" : DEBTS
+        "debt" : DEBTS,
     }
     if type_pay in dict_operator:
         db = get_db()
@@ -291,8 +326,14 @@ def filter_transactions(type_pay, id):
         id_pay = ids[id]
         filter_query = f"""
         AND ( (pay.id_payment != -1 OR yi.id_payment != -1) AND (pay.id_payment={id_pay} OR yi.id_payment={id_pay}) )
+        {extra_filter}
         """
         data = get_transactions(db, filter=filter_query)
+        return render_template("main/transactions.html", data=data)
+
+    if type_pay.lower() == "all":
+        db = get_db()
+        data = get_transactions(db, filter=extra_filter)
         return render_template("main/transactions.html", data=data)
     
     return error_handler("URL inválida!")
@@ -347,6 +388,11 @@ def operator_transaction(operation):
         return "TODO", 200
 
     return (f"Transação inserida com sucesso", 200)
+
+@app.route("/filter/transactions", methods=["POST"])
+@login_required
+def date_filter_transactions():
+    return "TODO", 200
 
 @app.route("/add/to", methods=["POST"])
 @login_required

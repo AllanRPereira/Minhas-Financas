@@ -52,3 +52,12 @@
 .btn-primary:active {
     background-color: #105191;
 }
+
+.btn-alt {
+    background-color: #DE7B45;
+
+}
+
+.btn-alt:active {
+    background-color: #C76E3E;
+}
